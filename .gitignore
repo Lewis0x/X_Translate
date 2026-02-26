@@ -4,3 +4,31 @@ output_*/
 **/__pycache__/
 *.pyc
 
+# local/env secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# keys/certs
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+id_rsa
+id_rsa.pub
+
+# runtime artifacts
+web_runs/
+input/
+logs/
+*.log
+*.lock
+*.tmp
+*.zip
+
+# editor/tooling
+.vscode/
+
