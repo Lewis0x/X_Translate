@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文档翻译工具</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f7f8fa; color: #1f2937; }
+    .wrap { max-width: 980px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #e5e7eb; }
+    h1 { margin: 0 0 16px 0; font-size: 24px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { font-size: 13px; color: #374151; display: block; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+    .full { grid-column: 1 / -1; }
+    button { margin-top: 12px; padding: 10px 16px; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; }
+    button:disabled { background: #9ca3af; cursor: not-allowed; }
+    .card { margin-top: 18px; padding: 14px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; }
+    .bar { width: 100%; height: 14px; background: #e5e7eb; border-radius: 7px; overflow: hidden; }
+    .bar > div { height: 100%; background: #10b981; width: 0%; transition: width .4s ease; }
+    .muted { color: #6b7280; font-size: 13px; }
+    pre { margin: 10px 0 0 0; background: #111827; color: #e5e7eb; padding: 10px; border-radius: 6px; max-height: 220px; overflow: auto; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>文档翻译 Web 界面</h1>
+    <form id="jobForm">
+      <div class="grid">
+        <div class="full">
+          <label>选择文件（支持多选）</label>
+          <input type="file" name="files" id="files" multiple required />
+        </div>
+        <div>
+          <label>源语言</label>
+          <input name="source" value="zh" />
+        </div>
+        <div>
+          <label>目标语言</label>
+          <input name="target" value="en" />
+        </div>
+        <div>
+          <label>Provider</label>
+          <select name="provider">
+            <option value="openai">openai</option>
+            <option value="openai_compatible">openai_compatible</option>
+          </select>
+        </div>
+        <div>
+          <label>模型</label>
+          <input name="model" value="gpt-4.1-mini" />
+        </div>
+        <div>
+          <label>API Key</label>
+          <input name="api_key" type="password" placeholder="sk-..." />
+        </div>
+        <div>
+          <label>Base URL</label>
+          <input name="base_url" value="https://api.openai.com/v1" />
+        </div>
+        <div>
+          <label>Endpoint</label>
+          <input name="endpoint" value="/chat/completions" />
+        </div>
+        <div>
+          <label>Batch Size</label>
+          <input name="batch_size" type="number" value="20" />
+        </div>
+        <div>
+          <label>Max Retries</label>
+          <input name="max_retries" type="number" value="3" />
+        </div>
+        <div>
+          <label>Rate Limit RPM</label>
+          <input name="rate_limit_rpm" type="number" value="60" />
+        </div>
+        <div>
+          <label>输出后缀</label>
+          <input name="suffix" value="en" />
+        </div>
+      </div>
+      <button type="submit" id="submitBtn">开始翻译</button>
+    </form>
+
+    <div class="card" id="statusCard" style="display:none;">
+      <div><strong>任务ID：</strong><span id="jobId"></span></div>
+      <div><strong>状态：</strong><span id="jobStatus">-</span></div>
+      <div><strong>当前文件：</strong><span id="currentFile">-</span></div>
+      <div class="muted">文件进度：<span id="fileProgressText">0/0 (0%)</span></div>
+      <div class="bar"><div id="fileBar"></div></div>
+      <div class="muted" style="margin-top:8px;">总体进度：<span id="overallProgressText">0%</span></div>
+      <div class="bar"><div id="overallBar"></div></div>
+      <div class="muted" style="margin-top:8px;">实时日志：</div>
+      <pre id="logBox"></pre>
+      <div style="margin-top:10px;"><a id="downloadLink" href="#" style="display:none;">下载结果包</a></div>
+      <div id="errorText" style="margin-top:8px;color:#dc2626;"></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('jobForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusCard = document.getElementById('statusCard');
+    const jobIdEl = document.getElementById('jobId');
+    const jobStatusEl = document.getElementById('jobStatus');
+    const currentFileEl = document.getElementById('currentFile');
+    const fileProgressTextEl = document.getElementById('fileProgressText');
+    const overallProgressTextEl = document.getElementById('overallProgressText');
+    const fileBar = document.getElementById('fileBar');
+    const overallBar = document.getElementById('overallBar');
+    const downloadLink = document.getElementById('downloadLink');
+    const errorText = document.getElementById('errorText');
+    const logBox = document.getElementById('logBox');
+
+    let timer = null;
+
+    function setProgress(filePercent, overallPercent, fileDone, fileTotal) {
+      fileBar.style.width = `${filePercent}%`;
+      overallBar.style.width = `${overallPercent}%`;
+      fileProgressTextEl.textContent = `${fileDone}/${fileTotal} (${filePercent}%)`;
+      overallProgressTextEl.textContent = `${overallPercent}%`;
+    }
+
+    function setLogs(lines) {
+      logBox.textContent = (lines || []).join('\n');
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    async function poll(jobId) {
+      const res = await fetch(`/api/jobs/${jobId}`);
+      const data = await res.json();
+      if (!res.ok) {
+        errorText.textContent = data.error || '查询失败';
+        return;
+      }
+
+      jobStatusEl.textContent = data.status;
+      currentFileEl.textContent = data.current_file || '-';
+      setProgress(data.file_percent || 0, data.overall_percent || 0, data.file_done || 0, data.file_total || 0);
+
+      const logRes = await fetch(`/api/jobs/${jobId}/logs?tail=120`);
+      if (logRes.ok) {
+        const logData = await logRes.json();
+        setLogs(logData.logs || []);
+      }
+
+      if (data.status === 'completed') {
+        clearInterval(timer);
+        submitBtn.disabled = false;
+        downloadLink.href = `/api/jobs/${jobId}/download`;
+        downloadLink.style.display = 'inline';
+      }
+      if (data.status === 'failed') {
+        clearInterval(timer);
+        submitBtn.disabled = false;
+        errorText.textContent = data.error || '任务失败';
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      errorText.textContent = '';
+      downloadLink.style.display = 'none';
+      statusCard.style.display = 'block';
+      setLogs([]);
+
+      const formData = new FormData(form);
+      const res = await fetch('/api/jobs', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        submitBtn.disabled = false;
+        errorText.textContent = data.error || '创建任务失败';
+        return;
+      }
+
+      const jobId = data.job_id;
+      jobIdEl.textContent = jobId;
+      jobStatusEl.textContent = 'queued';
+      setProgress(0, 0, 0, 0);
+      timer = setInterval(() => poll(jobId), 1200);
+      await poll(jobId);
+    });
+  </script>
+</body>
+</html>

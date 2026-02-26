@@ -1,0 +1,35 @@
+{
+  "LLM_PROVIDER": "openai",
+  "OPEN_API_KEY": "sk-xxxx",
+  "LLM_MODEL": "gpt-4.1-mini",
+  "OPENAI_BASE_URL": "https://api.openai.com/v1",
+  "OPENAI_ENDPOINT": "/chat/completions",
+  "LLM_BASE_URL": "",
+  "LLM_ENDPOINT": "/chat/completions",
+  "LLM_PROFILES": [
+    {
+      "name": "openai-gpt4o-mini",
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "base_url": "https://api.openai.com/v1",
+      "endpoint": "/chat/completions",
+      "api_key": "sk-xxxx"
+    },
+    {
+      "name": "deepseek-chat",
+      "provider": "openai_compatible",
+      "model": "deepseek-chat",
+      "base_url": "https://api.deepseek.com/v1",
+      "endpoint": "/chat/completions",
+      "api_key": "sk-xxxx"
+    },
+    {
+      "name": "qwen-plus",
+      "provider": "openai_compatible",
+      "model": "qwen-plus",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "endpoint": "/chat/completions",
+      "api_key": "sk-xxxx"
+    }
+  ]
+}

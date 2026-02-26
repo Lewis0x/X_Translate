@@ -1,0 +1,4 @@
+source,target,case_sensitive,lock
+API,API,true,true
+CAD,Computer-Aided Design,true,false
+OpenAI,OpenAI,true,true
