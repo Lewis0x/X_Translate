@@ -1,0 +1,6 @@
+source,target,case_sensitive,lock
+adverse event,adverse event,false,false
+informed consent,informed consent,false,false
+clinical trial,clinical trial,false,false
+diagnosis,diagnosis,false,false
+HIPAA,HIPAA,true,true

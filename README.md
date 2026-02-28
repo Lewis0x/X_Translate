@@ -34,6 +34,7 @@ copy local.config.sample.json local.config.json
 	"LLM_PROVIDER": "openai",
 	"OPEN_API_KEY": "sk-xxxx",
 	"LLM_MODEL": "gpt-4.1-mini",
+	"TRANSLATION_DOMAIN": "general",
 	"OPENAI_BASE_URL": "https://api.openai.com/v1",
 	"OPENAI_ENDPOINT": "/chat/completions",
 	"LLM_BASE_URL": "",
@@ -67,6 +68,7 @@ copy local.config.sample.json local.config.json
 - `LLM_BASE_URL`: 兼容接口的 base URL（如 `https://api.deepseek.com/v1`）
 - `LLM_ENDPOINT`: 兼容接口 endpoint，默认 `/chat/completions`
 - `LLM_PROFILES`: 可配置多个模型/API，用于自动对比选优
+- `TRANSLATION_DOMAIN`: 默认翻译专业场景，如 `general`/`legal`/`finance`
 
 路径优先级：
 
@@ -111,13 +113,20 @@ python run.py --input d:/Work/docs --target en --provider openai_compatible --ba
 
 ```bash
 python run.py --input d:/Work/docs --target zh --compare-apis --compare-models gpt-4o-mini,gpt-4.1-mini --output-dir ./output
+
+自动识别源语言 + 法律场景示例：
+
+```bash
+python run.py --input ./test_materials --target en --source auto --domain legal
+```
 ```
 
 常见参数：
 
 - `--input`: 文件或目录，可传多个
 - `--target`: 目标语言代码（如 `en`）
-- `--source`: 源语言代码，默认 `zh`
+- `--source`: 源语言代码，支持 `auto` 自动识别，默认 `auto`
+- `--domain`: 专业场景，如 `general`/`legal`/`finance`/`medical`/`it`/`academic`
 - `--glossary`: 术语表路径（可选）
 - `--output-dir`: 输出目录（建议新目录）
 - `--suffix`: 输出语言后缀，默认与 `--target` 一致
@@ -137,6 +146,24 @@ python run.py --input d:/Work/docs --target zh --compare-apis --compare-models g
 - `--force-run`: 忽略运行锁强制执行
 
 ## 6. 输出内容
+
+## 测试素材目录
+
+- 已提供 `test_materials/` 目录用于放置测试文件。
+- 可按场景自行建子目录（如 `legal/`、`finance/`）。
+- 已提供场景术语模板目录 `test_materials/glossary_templates/`：
+	- `general_glossary.csv`
+	- `legal_glossary.csv`
+	- `finance_glossary.csv`
+	- `it_glossary.csv`
+	- `medical_glossary.csv`
+	- `academic_glossary.csv`
+
+示例：
+
+```bash
+python run.py --input ./test_materials --target en --source auto --domain legal --glossary ./test_materials/glossary_templates/legal_glossary.csv
+```
 
 运行后会在输出目录生成：
 
@@ -172,6 +199,41 @@ python webapp.py
 - 任务状态持久化到 `web_runs/<job_id>/job_state.json`，Web 重载后仍可继续查询任务状态。
 
 ## 8. 说明
+
+## 9. Office 插件（Word/Excel）
+
+除 Web 页面外，项目已提供 Office Task Pane 插件，可在 Word/Excel 内直接翻译选区。
+
+### 9.1 启动后端
+
+```bash
+python webapp.py
+```
+
+插件页面地址：
+
+- `http://127.0.0.1:5050/office/addin`
+
+插件 manifest 地址：
+
+- `http://127.0.0.1:5050/office/manifest.xml`
+
+manifest 文件位置：
+
+- `office_addin/manifest.xml`
+
+### 9.2 功能
+
+- Word：读取当前选区文本，翻译后可一键替换选区。
+- Excel：读取当前选区所有字符串单元格，批量翻译并回写到原单元格。
+- 插件支持配置 `provider/model/api_key/base_url/endpoint`，空 API Key 时使用服务端 `local.config.json`。
+- 插件支持“启用术语表”开关与 `glossary_path` 路径配置（CSV/JSON，路径为服务端机器本地路径）。
+
+### 9.3 侧载（Sideload）
+
+在 Office（Word/Excel）中通过“我的加载项 / Upload My Add-in”上传 `office_addin/manifest.xml`。
+
+若你的 Office 环境对 `http://127.0.0.1` 有策略限制，可将 `manifest.xml` 中 URL 改为你本机可访问的 HTTPS 地址（如本地反向代理证书域名）。
 
 - `.docx` 采用“复制 + 文本节点替换”策略，尽量保持版式。
 - `.pdf` 为文本块覆盖方案，复杂排版可能需人工抽检。

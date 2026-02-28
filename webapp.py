@@ -11,6 +11,7 @@ from typing import Any
 
 from flask import Flask
 from flask import jsonify
+from flask import make_response
 from flask import render_template
 from flask import request
 from flask import send_file
@@ -18,6 +19,9 @@ from werkzeug.utils import secure_filename
 
 from doc_translator.config import is_pid_alive
 from doc_translator.config import load_local_config
+from doc_translator.glossary import Glossary
+from doc_translator.translator import TranslationConfig
+from doc_translator.translator import create_translator
 from doc_translator.web_state import make_initial_state
 from doc_translator.web_state import patch_state
 from doc_translator.web_state import read_state
@@ -35,6 +39,22 @@ _jobs: dict[str, dict[str, Any]] = {}
 @app.get("/")
 def index():
     return render_template("index.html")
+
+
+@app.get("/office/addin")
+def office_addin_page():
+    return render_template("office_addin.html")
+
+
+@app.get("/office/manifest.xml")
+def office_addin_manifest():
+    manifest_path = workspace_root / "office_addin" / "manifest.xml"
+    if not manifest_path.exists():
+        return jsonify({"error": "manifest 不存在"}), 404
+
+    response = make_response(manifest_path.read_text(encoding="utf-8"))
+    response.headers["Content-Type"] = "application/xml; charset=utf-8"
+    return response
 
 
 @app.post("/api/jobs")
@@ -71,6 +91,7 @@ def create_job():
     config_payload: dict[str, Any] = {
         "source": request.form.get("source", "zh"),
         "target": request.form.get("target", "en"),
+        "domain": request.form.get("domain", "general"),
         "provider": provider,
         "model": request.form.get("model", "") or str(local_config.get("LLM_MODEL", local_config.get("OPENAI_MODEL", ""))),
         "api_key": request.form.get("api_key", "") or str(local_config.get("OPEN_API_KEY", "")),
@@ -130,6 +151,42 @@ def create_job():
         return jsonify({"error": f"任务启动失败: {exc}"}), 500
 
     return jsonify({"job_id": job_id})
+
+
+@app.post("/api/translate_text")
+def translate_text():
+    payload = request.get_json(silent=True) or {}
+    text = str(payload.get("text", ""))
+    if not text.strip():
+        return jsonify({"error": "text 不能为空"}), 400
+
+    try:
+        config = _build_translation_config(payload)
+        translator = create_translator(config)
+        translated_text = _translate_texts_with_optional_glossary([text], translator, payload)[0]
+    except Exception as exc:
+        return jsonify({"error": f"翻译失败: {exc}"}), 500
+
+    return jsonify({"translated_text": translated_text})
+
+
+@app.post("/api/translate_batch")
+def translate_batch():
+    payload = request.get_json(silent=True) or {}
+    texts = payload.get("texts")
+    if not isinstance(texts, list) or not texts:
+        return jsonify({"error": "texts 不能为空数组"}), 400
+
+    normalized_texts = [str(item) for item in texts]
+
+    try:
+        config = _build_translation_config(payload)
+        translator = create_translator(config)
+        translations = _translate_texts_with_optional_glossary(normalized_texts, translator, payload)
+    except Exception as exc:
+        return jsonify({"error": f"翻译失败: {exc}"}), 500
+
+    return jsonify({"translations": translations})
 
 
 @app.get("/api/jobs/<job_id>")
@@ -203,6 +260,72 @@ def _read_job_state(job_id: str) -> dict[str, Any]:
             )
 
     return state
+
+
+def _to_int(value: Any, default_value: int) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default_value
+
+
+def _build_translation_config(payload: dict[str, Any]) -> TranslationConfig:
+    local_config = load_local_config(str(workspace_root / "local.config.json"))
+    provider = str(payload.get("provider", "") or local_config.get("LLM_PROVIDER", "openai"))
+    provider_lower = provider.strip().lower()
+
+    if provider_lower == "openai":
+        default_base_url = str(local_config.get("OPENAI_BASE_URL", "") or local_config.get("LLM_BASE_URL", ""))
+        default_endpoint = str(local_config.get("OPENAI_ENDPOINT", "") or local_config.get("LLM_ENDPOINT", "/chat/completions"))
+    else:
+        default_base_url = str(local_config.get("LLM_BASE_URL", ""))
+        default_endpoint = str(local_config.get("LLM_ENDPOINT", "/chat/completions"))
+
+    return TranslationConfig(
+        source_lang=str(payload.get("source", "zh") or "zh"),
+        target_lang=str(payload.get("target", "en") or "en"),
+        domain=str(payload.get("domain", "") or local_config.get("TRANSLATION_DOMAIN", "general")),
+        provider=provider,
+        api_key=str(payload.get("api_key", "") or local_config.get("OPEN_API_KEY", "")),
+        base_url=str(payload.get("base_url", "") or default_base_url),
+        endpoint=str(payload.get("endpoint", "") or default_endpoint),
+        batch_size=_to_int(payload.get("batch_size", 20), 20),
+        max_retries=_to_int(payload.get("max_retries", 3), 3),
+        rate_limit_rpm=_to_int(payload.get("rate_limit_rpm", 60), 60),
+        model=str(payload.get("model", "") or local_config.get("LLM_MODEL", local_config.get("OPENAI_MODEL", ""))),
+    )
+
+
+def _parse_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _translate_texts_with_optional_glossary(texts: list[str], translator, payload: dict[str, Any]) -> list[str]:
+    use_glossary = _parse_bool(payload.get("use_glossary"))
+    glossary_path = str(payload.get("glossary_path", "")).strip()
+
+    if not use_glossary:
+        return translator.translate(texts)
+
+    glossary = Glossary.load(glossary_path)
+    preprocessed_texts: list[str] = []
+    placeholders_list: list[dict[str, str]] = []
+
+    for text in texts:
+        updated_text, placeholders, _ = glossary.preprocess_locks(text)
+        preprocessed_texts.append(updated_text)
+        placeholders_list.append(placeholders)
+
+    translated = translator.translate(preprocessed_texts)
+    finalized: list[str] = []
+    for index, text in enumerate(translated):
+        post_text, _ = glossary.postprocess(text, placeholders_list[index])
+        finalized.append(post_text)
+    return finalized
 
 
 if __name__ == "__main__":

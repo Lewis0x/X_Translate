@@ -1,0 +1,6 @@
+source,target,case_sensitive,lock
+methodology,methodology,false,false
+literature review,literature review,false,false
+hypothesis,hypothesis,false,false
+statistical significance,statistical significance,false,false
+p-value,p-value,true,true

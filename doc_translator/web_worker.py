@@ -74,6 +74,7 @@ def main() -> None:
         config = TranslationConfig(
             source_lang=str(config_payload["source"]),
             target_lang=str(config_payload["target"]),
+            domain=str(config_payload.get("domain", "general")),
             provider=str(config_payload["provider"]),
             api_key=str(config_payload["api_key"]),
             model=str(config_payload["model"]),

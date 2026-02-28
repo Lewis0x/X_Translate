@@ -1,6 +1,8 @@
 local.config.json
 .venv/
+output/
 output_*/
+scripts/tmp_*.py
 **/__pycache__/
 *.pyc
 
