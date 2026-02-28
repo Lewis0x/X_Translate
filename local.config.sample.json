@@ -2,6 +2,7 @@
   "LLM_PROVIDER": "openai",
   "OPEN_API_KEY": "sk-xxxx",
   "LLM_MODEL": "gpt-4.1-mini",
+  "TRANSLATION_DOMAIN": "general",
   "OPENAI_BASE_URL": "https://api.openai.com/v1",
   "OPENAI_ENDPOINT": "/chat/completions",
   "LLM_BASE_URL": "",

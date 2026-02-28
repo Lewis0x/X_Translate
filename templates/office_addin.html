@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>X Translate Office 插件</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --ok: #16a34a;
+      --error: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 14px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "PingFang SC", Arial, sans-serif;
+      font-size: 14px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 4px 12px rgba(17, 24, 39, 0.06);
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .muted { color: var(--muted); }
+    .grid {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      outline: none;
+      background: #fff;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .full { grid-column: 1 / -1; }
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+    button {
+      flex: 1;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: white;
+      background: var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { background: var(--primary-hover); }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+    .secondary {
+      background: #334155;
+    }
+    .secondary:hover { background: #1e293b; }
+    .panel {
+      margin-top: 12px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      min-height: 90px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+    .ok { color: var(--ok); }
+    .error { color: var(--error); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>X Translate</h1>
+    <div class="muted">在 Word/Excel 中翻译当前选区并可一键替换。</div>
+
+    <div class="grid">
+      <div>
+        <label>源语言</label>
+        <select id="source">
+          <option value="auto" selected>自动检测</option>
+          <option value="zh">中文</option>
+          <option value="en">英文</option>
+          <option value="ja">日文</option>
+          <option value="ko">韩文</option>
+          <option value="fr">法文</option>
+          <option value="de">德文</option>
+          <option value="es">西班牙文</option>
+          <option value="ru">俄文</option>
+        </select>
+      </div>
+      <div>
+        <label>目标语言</label>
+        <select id="target">
+          <option value="en" selected>英文</option>
+          <option value="zh">中文</option>
+          <option value="ja">日文</option>
+          <option value="ko">韩文</option>
+          <option value="fr">法文</option>
+          <option value="de">德文</option>
+          <option value="es">西班牙文</option>
+          <option value="ru">俄文</option>
+        </select>
+      </div>
+      <div>
+        <label>Provider</label>
+        <select id="provider">
+          <option value="openai">openai</option>
+          <option value="openai_compatible" selected>openai_compatible</option>
+        </select>
+      </div>
+      <div>
+        <label>模型</label>
+        <input id="model" value="gpt-4.1" />
+      </div>
+      <div>
+        <label>专业场景</label>
+        <select id="domain">
+          <option value="general" selected>通用</option>
+          <option value="legal">法律文书</option>
+          <option value="finance">财务报表</option>
+          <option value="medical">医疗健康</option>
+          <option value="it">技术文档</option>
+          <option value="academic">学术论文</option>
+        </select>
+      </div>
+      <div class="full">
+        <label>API Key（可空，空则用服务器 local.config.json）</label>
+        <input id="api_key" type="password" placeholder="sk-..." />
+      </div>
+      <div>
+        <label>Base URL</label>
+        <input id="base_url" value="https://api.getgoapi.com/v1" />
+      </div>
+      <div>
+        <label>Endpoint</label>
+        <input id="endpoint" value="/chat/completions" />
+      </div>
+      <div class="full">
+        <label style="display:flex;align-items:center;gap:8px;color:var(--text);">
+          <input id="use_glossary" type="checkbox" style="width:auto;" />
+          启用术语表（锁定词与强制替换）
+        </label>
+      </div>
+      <div class="full">
+        <label>术语表路径（CSV/JSON，服务端本地路径）</label>
+        <input id="glossary_path" placeholder="例如: d:/Work/Code/X_Translate/glossary.sample.csv" />
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="translateBtn">翻译选区</button>
+      <button id="replaceBtn" class="secondary">替换选区</button>
+    </div>
+
+    <div id="status" class="panel muted">等待操作…</div>
+    <div id="preview" class="panel"></div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const previewEl = document.getElementById("preview");
+    const translateBtn = document.getElementById("translateBtn");
+    const replaceBtn = document.getElementById("replaceBtn");
+
+    let lastTranslation = "";
+
+    function setStatus(text, type = "muted") {
+      statusEl.textContent = text;
+      statusEl.className = `panel ${type}`;
+    }
+
+    function getConfig() {
+      return {
+        source: document.getElementById("source").value,
+        target: document.getElementById("target").value,
+        provider: document.getElementById("provider").value,
+        model: document.getElementById("model").value,
+        domain: document.getElementById("domain").value,
+        api_key: document.getElementById("api_key").value,
+        base_url: document.getElementById("base_url").value,
+        endpoint: document.getElementById("endpoint").value,
+        use_glossary: document.getElementById("use_glossary").checked,
+        glossary_path: document.getElementById("glossary_path").value,
+        batch_size: 20,
+        max_retries: 3,
+        rate_limit_rpm: 60,
+      };
+    }
+
+    async function requestSingleTranslation(text) {
+      const payload = { ...getConfig(), text };
+      const res = await fetch("/api/translate_text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "翻译失败");
+      }
+      return data.translated_text || "";
+    }
+
+    async function requestBatchTranslation(texts) {
+      const payload = { ...getConfig(), texts };
+      const res = await fetch("/api/translate_batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "批量翻译失败");
+      }
+      return Array.isArray(data.translations) ? data.translations : [];
+    }
+
+    async function readWordSelection() {
+      return Word.run(async (context) => {
+        const range = context.document.getSelection();
+        range.load("text");
+        await context.sync();
+        return range.text || "";
+      });
+    }
+
+    async function replaceWordSelection(text) {
+      return Word.run(async (context) => {
+        const range = context.document.getSelection();
+        range.insertText(text, "Replace");
+        await context.sync();
+      });
+    }
+
+    async function translateExcelSelection(replaceInPlace) {
+      return Excel.run(async (context) => {
+        const range = context.workbook.getSelectedRange();
+        range.load(["values", "rowCount", "columnCount"]);
+        await context.sync();
+
+        const cells = [];
+        for (let row = 0; row < range.rowCount; row += 1) {
+          for (let col = 0; col < range.columnCount; col += 1) {
+            const value = range.values[row][col];
+            if (typeof value === "string" && value.trim()) {
+              cells.push({ row, col, text: value });
+            }
+          }
+        }
+
+        if (!cells.length) {
+          throw new Error("Excel 选区中没有可翻译文本单元格");
+        }
+
+        const translations = await requestBatchTranslation(cells.map(item => item.text));
+        if (translations.length !== cells.length) {
+          throw new Error("翻译结果数量与输入不一致");
+        }
+
+        if (replaceInPlace) {
+          const nextValues = range.values.map(row => row.slice());
+          for (let i = 0; i < cells.length; i += 1) {
+            const { row, col } = cells[i];
+            nextValues[row][col] = translations[i];
+          }
+          range.values = nextValues;
+          await context.sync();
+        }
+
+        return translations.join("\n");
+      });
+    }
+
+    async function translateSelectionOnly() {
+      const host = Office.context.host;
+      if (host === Office.HostType.Word) {
+        const selected = await readWordSelection();
+        if (!selected.trim()) {
+          throw new Error("Word 选区为空");
+        }
+        return requestSingleTranslation(selected);
+      }
+      if (host === Office.HostType.Excel) {
+        return translateExcelSelection(false);
+      }
+      throw new Error("当前仅支持 Word/Excel");
+    }
+
+    async function replaceSelection() {
+      const host = Office.context.host;
+      if (host === Office.HostType.Word) {
+        if (!lastTranslation.trim()) {
+          throw new Error("请先执行“翻译选区”");
+        }
+        await replaceWordSelection(lastTranslation);
+        return;
+      }
+      if (host === Office.HostType.Excel) {
+        await translateExcelSelection(true);
+        return;
+      }
+      throw new Error("当前仅支持 Word/Excel");
+    }
+
+    async function withBusy(handler) {
+      translateBtn.disabled = true;
+      replaceBtn.disabled = true;
+      try {
+        await handler();
+      } finally {
+        translateBtn.disabled = false;
+        replaceBtn.disabled = false;
+      }
+    }
+
+    Office.onReady(() => {
+      setStatus(`已连接 Office 宿主: ${Office.context.host}`, "ok");
+      previewEl.textContent = "";
+
+      translateBtn.addEventListener("click", () => withBusy(async () => {
+        setStatus("正在翻译选区…");
+        const translated = await translateSelectionOnly();
+        lastTranslation = translated;
+        previewEl.textContent = translated;
+        setStatus("翻译完成", "ok");
+      }).catch((err) => {
+        setStatus(err.message || String(err), "error");
+      }));
+
+      replaceBtn.addEventListener("click", () => withBusy(async () => {
+        setStatus("正在替换选区…");
+        await replaceSelection();
+        setStatus("替换完成", "ok");
+      }).catch((err) => {
+        setStatus(err.message || String(err), "error");
+      }));
+    });
+  </script>
+</body>
+</html>

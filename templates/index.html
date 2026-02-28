@@ -4,76 +4,347 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>文档翻译工具</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; background: #f7f8fa; color: #1f2937; }
-    .wrap { max-width: 980px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #e5e7eb; }
-    h1 { margin: 0 0 16px 0; font-size: 24px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    label { font-size: 13px; color: #374151; display: block; margin-bottom: 4px; }
-    input, select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+    :root {
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --success: #10b981;
+      --error: #ef4444;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      margin: 0; 
+      padding: 40px 20px; 
+      background: var(--bg-color); 
+      color: var(--text-main); 
+      line-height: 1.5;
+    }
+
+    .wrap { 
+      max-width: 800px; 
+      margin: 0 auto; 
+      background: var(--card-bg); 
+      padding: 32px; 
+      border-radius: var(--radius); 
+      box-shadow: var(--shadow); 
+    }
+
+    h1 { 
+      margin: 0 0 24px 0; 
+      font-size: 28px; 
+      font-weight: 600;
+      color: var(--text-main);
+      text-align: center;
+    }
+
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+      gap: 20px; 
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label { 
+      font-size: 14px; 
+      font-weight: 500;
+      color: var(--text-main); 
+    }
+
+    input, select { 
+      width: 100%; 
+      padding: 10px 12px; 
+      border: 1px solid var(--border-color); 
+      border-radius: 8px; 
+      font-size: 14px;
+      transition: all 0.2s;
+      background-color: #f9fafb;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      background-color: #fff;
+    }
+
     .full { grid-column: 1 / -1; }
-    button { margin-top: 12px; padding: 10px 16px; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; }
-    button:disabled { background: #9ca3af; cursor: not-allowed; }
-    .card { margin-top: 18px; padding: 14px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; }
-    .bar { width: 100%; height: 14px; background: #e5e7eb; border-radius: 7px; overflow: hidden; }
-    .bar > div { height: 100%; background: #10b981; width: 0%; transition: width .4s ease; }
-    .muted { color: #6b7280; font-size: 13px; }
-    pre { margin: 10px 0 0 0; background: #111827; color: #e5e7eb; padding: 10px; border-radius: 6px; max-height: 220px; overflow: auto; font-size: 12px; }
+
+    .file-upload {
+      position: relative;
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      background: #f9fafb;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .file-upload:hover {
+      border-color: var(--primary);
+      background: #eff6ff;
+    }
+
+    .file-upload input[type="file"] {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-upload-text {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .file-upload-text strong {
+      color: var(--primary);
+    }
+
+    button { 
+      margin-top: 24px; 
+      width: 100%;
+      padding: 12px 24px; 
+      border: none; 
+      border-radius: 8px; 
+      background: var(--primary); 
+      color: #fff; 
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer; 
+      transition: background 0.2s;
+    }
+
+    button:hover:not(:disabled) { background: var(--primary-hover); }
+    button:disabled { background: #9ca3af; cursor: not-allowed; opacity: 0.7; }
+
+    .card { 
+      margin-top: 32px; 
+      padding: 24px; 
+      border: 1px solid var(--border-color); 
+      border-radius: var(--radius); 
+      background: #f9fafb; 
+    }
+
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      background: #e5e7eb;
+      color: var(--text-muted);
+    }
+
+    .status-badge.running { background: #dbeafe; color: #1d4ed8; }
+    .status-badge.completed { background: #d1fae5; color: #047857; }
+    .status-badge.failed { background: #fee2e2; color: #b91c1c; }
+
+    .info-row {
+      display: flex;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .info-label {
+      width: 80px;
+      color: var(--text-muted);
+    }
+
+    .info-value {
+      flex: 1;
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    .progress-section { margin-top: 20px; }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .bar { 
+      width: 100%; 
+      height: 8px; 
+      background: #e5e7eb; 
+      border-radius: 4px; 
+      overflow: hidden; 
+    }
+
+    .bar > div { 
+      height: 100%; 
+      background: var(--primary); 
+      width: 0%; 
+      transition: width 0.4s ease; 
+    }
+
+    .bar.success > div { background: var(--success); }
+
+    pre { 
+      margin: 16px 0 0 0; 
+      background: #1f2937; 
+      color: #f3f4f6; 
+      padding: 16px; 
+      border-radius: 8px; 
+      max-height: 240px; 
+      overflow-y: auto; 
+      font-size: 13px; 
+      font-family: 'Fira Code', monospace;
+      line-height: 1.4;
+    }
+
+    .download-btn {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 10px 20px;
+      background: var(--success);
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover { background: #059669; }
+    
+    .error-msg {
+      margin-top: 12px;
+      color: var(--error);
+      font-size: 14px;
+      padding: 12px;
+      background: #fef2f2;
+      border-radius: 6px;
+      border: 1px solid #fecaca;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>文档翻译 Web 界面</h1>
+    <h1>文档翻译工具</h1>
     <form id="jobForm">
       <div class="grid">
-        <div class="full">
-          <label>选择文件（支持多选）</label>
-          <input type="file" name="files" id="files" multiple required />
+        <div class="full form-group">
+          <label>选择文件</label>
+          <div class="file-upload">
+            <input type="file" name="files" id="files" multiple required />
+            <div class="file-upload-text">
+              <svg style="width:32px;height:32px;margin:0 auto 8px;color:#9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+              <div><strong>点击选择文件</strong> 或拖拽文件到此处</div>
+              <div style="margin-top:4px;font-size:12px;" id="fileCount">支持多选 (.docx, .xlsx, .pdf)</div>
+            </div>
+          </div>
         </div>
-        <div>
+        
+        <div class="form-group">
           <label>源语言</label>
-          <input name="source" value="zh" />
-        </div>
-        <div>
-          <label>目标语言</label>
-          <input name="target" value="en" />
-        </div>
-        <div>
-          <label>Provider</label>
-          <select name="provider">
-            <option value="openai">openai</option>
-            <option value="openai_compatible">openai_compatible</option>
+          <select name="source">
+            <option value="auto" selected>自动检测 (auto)</option>
+            <option value="zh">中文 (zh)</option>
+            <option value="en">英文 (en)</option>
+            <option value="ja">日文 (ja)</option>
+            <option value="ko">韩文 (ko)</option>
+            <option value="fr">法文 (fr)</option>
+            <option value="de">德文 (de)</option>
+            <option value="es">西班牙文 (es)</option>
+            <option value="ru">俄文 (ru)</option>
           </select>
         </div>
-        <div>
-          <label>模型</label>
-          <input name="model" value="gpt-4.1-mini" />
+        <div class="form-group">
+          <label>目标语言</label>
+          <select name="target">
+            <option value="en">英文 (en)</option>
+            <option value="zh">中文 (zh)</option>
+            <option value="ja">日文 (ja)</option>
+            <option value="ko">韩文 (ko)</option>
+            <option value="fr">法文 (fr)</option>
+            <option value="de">德文 (de)</option>
+            <option value="es">西班牙文 (es)</option>
+            <option value="ru">俄文 (ru)</option>
+          </select>
         </div>
-        <div>
+        
+        <div class="form-group">
+          <label>Provider</label>
+          <select name="provider">
+            <option value="openai">OpenAI</option>
+            <option value="openai_compatible">OpenAI Compatible</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>模型名称</label>
+          <input name="model" value="gpt-4o-mini" />
+        </div>
+        <div class="form-group">
+          <label>专业场景</label>
+          <select name="domain">
+            <option value="general" selected>通用 (general)</option>
+            <option value="legal">法律文书 (legal)</option>
+            <option value="finance">财务报表 (finance)</option>
+            <option value="medical">医疗健康 (medical)</option>
+            <option value="it">技术文档 (it)</option>
+            <option value="academic">学术论文 (academic)</option>
+          </select>
+        </div>
+        
+        <div class="full form-group">
           <label>API Key</label>
           <input name="api_key" type="password" placeholder="sk-..." />
         </div>
-        <div>
+        
+        <div class="form-group">
           <label>Base URL</label>
           <input name="base_url" value="https://api.openai.com/v1" />
         </div>
-        <div>
+        <div class="form-group">
           <label>Endpoint</label>
           <input name="endpoint" value="/chat/completions" />
         </div>
-        <div>
+        
+        <div class="form-group">
           <label>Batch Size</label>
           <input name="batch_size" type="number" value="20" />
         </div>
-        <div>
+        <div class="form-group">
           <label>Max Retries</label>
           <input name="max_retries" type="number" value="3" />
         </div>
-        <div>
-          <label>Rate Limit RPM</label>
+        
+        <div class="form-group">
+          <label>Rate Limit (RPM)</label>
           <input name="rate_limit_rpm" type="number" value="60" />
         </div>
-        <div>
+        <div class="form-group">
           <label>输出后缀</label>
           <input name="suffix" value="en" />
         </div>
@@ -82,17 +353,49 @@
     </form>
 
     <div class="card" id="statusCard" style="display:none;">
-      <div><strong>任务ID：</strong><span id="jobId"></span></div>
-      <div><strong>状态：</strong><span id="jobStatus">-</span></div>
-      <div><strong>当前文件：</strong><span id="currentFile">-</span></div>
-      <div class="muted">文件进度：<span id="fileProgressText">0/0 (0%)</span></div>
-      <div class="bar"><div id="fileBar"></div></div>
-      <div class="muted" style="margin-top:8px;">总体进度：<span id="overallProgressText">0%</span></div>
-      <div class="bar"><div id="overallBar"></div></div>
-      <div class="muted" style="margin-top:8px;">实时日志：</div>
-      <pre id="logBox"></pre>
-      <div style="margin-top:10px;"><a id="downloadLink" href="#" style="display:none;">下载结果包</a></div>
-      <div id="errorText" style="margin-top:8px;color:#dc2626;"></div>
+      <div class="status-header">
+        <div style="font-weight:600;font-size:16px;">任务状态</div>
+        <div id="jobStatusBadge" class="status-badge">准备中</div>
+      </div>
+      
+      <div class="info-row">
+        <div class="info-label">任务 ID</div>
+        <div class="info-value" id="jobId" style="font-family:monospace;">-</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">当前文件</div>
+        <div class="info-value" id="currentFile">-</div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span>当前文件进度</span>
+          <span id="fileProgressText">0/0 (0%)</span>
+        </div>
+        <div class="bar"><div id="fileBar"></div></div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span>总体进度</span>
+          <span id="overallProgressText">0%</span>
+        </div>
+        <div class="bar success"><div id="overallBar"></div></div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;font-weight:500;">运行日志</div>
+        <pre id="logBox"></pre>
+      </div>
+      
+      <div id="errorText" class="error-msg"></div>
+      
+      <div style="text-align:center;">
+        <a id="downloadLink" href="#" class="download-btn" style="display:none;">
+          <svg style="width:16px;height:16px;display:inline-block;vertical-align:text-bottom;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          下载翻译结果
+        </a>
+      </div>
     </div>
   </div>
 
@@ -101,7 +404,7 @@
     const submitBtn = document.getElementById('submitBtn');
     const statusCard = document.getElementById('statusCard');
     const jobIdEl = document.getElementById('jobId');
-    const jobStatusEl = document.getElementById('jobStatus');
+    const jobStatusBadge = document.getElementById('jobStatusBadge');
     const currentFileEl = document.getElementById('currentFile');
     const fileProgressTextEl = document.getElementById('fileProgressText');
     const overallProgressTextEl = document.getElementById('overallProgressText');
@@ -110,8 +413,31 @@
     const downloadLink = document.getElementById('downloadLink');
     const errorText = document.getElementById('errorText');
     const logBox = document.getElementById('logBox');
+    const fileInput = document.getElementById('files');
+    const fileCount = document.getElementById('fileCount');
 
     let timer = null;
+
+    fileInput.addEventListener('change', (e) => {
+      const count = e.target.files.length;
+      if (count > 0) {
+        fileCount.textContent = `已选择 ${count} 个文件`;
+        fileCount.style.color = 'var(--primary)';
+        fileCount.style.fontWeight = '500';
+      } else {
+        fileCount.textContent = '支持多选 (.docx, .xlsx, .pdf)';
+        fileCount.style.color = '';
+        fileCount.style.fontWeight = '';
+      }
+    });
+
+    function updateStatusBadge(status) {
+      jobStatusBadge.textContent = status;
+      jobStatusBadge.className = 'status-badge';
+      if (status === 'running') jobStatusBadge.classList.add('running');
+      else if (status === 'completed') jobStatusBadge.classList.add('completed');
+      else if (status === 'failed') jobStatusBadge.classList.add('failed');
+    }
 
     function setProgress(filePercent, overallPercent, fileDone, fileTotal) {
       fileBar.style.width = `${filePercent}%`;
@@ -125,60 +451,82 @@
       logBox.scrollTop = logBox.scrollHeight;
     }
 
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorText.style.display = msg ? 'block' : 'none';
+    }
+
     async function poll(jobId) {
-      const res = await fetch(`/api/jobs/${jobId}`);
-      const data = await res.json();
-      if (!res.ok) {
-        errorText.textContent = data.error || '查询失败';
-        return;
-      }
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`);
+        const data = await res.json();
+        if (!res.ok) {
+          showError(data.error || '查询失败');
+          return;
+        }
 
-      jobStatusEl.textContent = data.status;
-      currentFileEl.textContent = data.current_file || '-';
-      setProgress(data.file_percent || 0, data.overall_percent || 0, data.file_done || 0, data.file_total || 0);
+        updateStatusBadge(data.status);
+        currentFileEl.textContent = data.current_file || '-';
+        setProgress(data.file_percent || 0, data.overall_percent || 0, data.file_done || 0, data.file_total || 0);
 
-      const logRes = await fetch(`/api/jobs/${jobId}/logs?tail=120`);
-      if (logRes.ok) {
-        const logData = await logRes.json();
-        setLogs(logData.logs || []);
-      }
+        const logRes = await fetch(`/api/jobs/${jobId}/logs?tail=120`);
+        if (logRes.ok) {
+          const logData = await logRes.json();
+          setLogs(logData.logs || []);
+        }
 
-      if (data.status === 'completed') {
-        clearInterval(timer);
-        submitBtn.disabled = false;
-        downloadLink.href = `/api/jobs/${jobId}/download`;
-        downloadLink.style.display = 'inline';
-      }
-      if (data.status === 'failed') {
-        clearInterval(timer);
-        submitBtn.disabled = false;
-        errorText.textContent = data.error || '任务失败';
+        if (data.status === 'completed') {
+          clearInterval(timer);
+          submitBtn.disabled = false;
+          submitBtn.textContent = '开始翻译';
+          downloadLink.href = `/api/jobs/${jobId}/download`;
+          downloadLink.style.display = 'inline-block';
+        }
+        if (data.status === 'failed') {
+          clearInterval(timer);
+          submitBtn.disabled = false;
+          submitBtn.textContent = '开始翻译';
+          showError(data.error || '任务失败');
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
-      errorText.textContent = '';
+      submitBtn.textContent = '提交中...';
+      showError('');
       downloadLink.style.display = 'none';
       statusCard.style.display = 'block';
       setLogs([]);
+      updateStatusBadge('queued');
 
-      const formData = new FormData(form);
-      const res = await fetch('/api/jobs', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (!res.ok) {
+      try {
+        const formData = new FormData(form);
+        const res = await fetch('/api/jobs', { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        if (!res.ok) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '开始翻译';
+          showError(data.error || '创建任务失败');
+          return;
+        }
+
+        const jobId = data.job_id;
+        jobIdEl.textContent = jobId;
+        setProgress(0, 0, 0, 0);
+        
+        if (timer) clearInterval(timer);
+        timer = setInterval(() => poll(jobId), 1200);
+        await poll(jobId);
+      } catch (err) {
         submitBtn.disabled = false;
-        errorText.textContent = data.error || '创建任务失败';
-        return;
+        submitBtn.textContent = '开始翻译';
+        showError('网络错误，请重试');
       }
-
-      const jobId = data.job_id;
-      jobIdEl.textContent = jobId;
-      jobStatusEl.textContent = 'queued';
-      setProgress(0, 0, 0, 0);
-      timer = setInterval(() => poll(jobId), 1200);
-      await poll(jobId);
     });
   </script>
 </body>

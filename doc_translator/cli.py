@@ -23,7 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="文档翻译工具（docx/xlsx/pdf）")
     parser.add_argument("--input", nargs="+", required=True, help="输入文件或目录，可传多个")
     parser.add_argument("--target", required=True, help="目标语言代码，如 en")
-    parser.add_argument("--source", default="zh", help="源语言代码，默认 zh")
+    parser.add_argument("--source", default="auto", help="源语言代码，支持 auto 自动识别，默认 auto")
+    parser.add_argument("--domain", default="general", help="翻译专业场景，如 general/legal/finance/medical")
     parser.add_argument("--glossary", default=None, help="术语表路径（csv/json）")
     parser.add_argument("--output-dir", default="./output", help="输出目录（建议新目录）")
     parser.add_argument("--suffix", default=None, help="输出文件后缀，默认与target一致")
@@ -220,6 +221,7 @@ def _make_config_from_args(
     return TranslationConfig(
         source_lang=args.source,
         target_lang=args.target,
+        domain=str(profile_overrides.get("domain", args.domain or local_config.get("TRANSLATION_DOMAIN", "general"))),
         provider=provider,
         api_key=resolved_api_key,
         model=resolved_model,

@@ -19,6 +19,7 @@ from typing import Protocol
 class TranslationConfig:
     source_lang: str
     target_lang: str
+    domain: str = "general"
     provider: str = "openai"
     api_key: str = ""
     base_url: str = ""
@@ -55,10 +56,13 @@ class BaseBatchTranslator(ABC):
             time.sleep(self.request_interval - elapsed)
 
     @staticmethod
-    def _build_prompt(source_lang: str, target_lang: str) -> str:
+    def _build_prompt(source_lang: str, target_lang: str, domain: str) -> str:
+        source_text = "自动识别源语言" if source_lang.strip().lower() in {"auto", "", "detect"} else f"从 {source_lang}"
+        domain_text = (domain or "general").strip()
         return (
             "你是专业技术文档翻译器。"
-            f"请将输入数组中的每一项从 {source_lang} 翻译为 {target_lang}。"
+            f"请将输入数组中的每一项{source_text}翻译为 {target_lang}。"
+            f"翻译场景：{domain_text}。请使用该领域的专业术语和表达。"
             "严格保持数组长度和顺序一致。"
             "只输出 JSON 数组字符串，不要输出任何额外文本。"
         )
@@ -115,7 +119,7 @@ class OpenAITranslator(BaseBatchTranslator):
             return []
 
         self._sleep_if_needed()
-        prompt = self._build_prompt(self.config.source_lang, self.config.target_lang)
+        prompt = self._build_prompt(self.config.source_lang, self.config.target_lang, self.config.domain)
 
         message = json.dumps(texts, ensure_ascii=False)
         retries = self.config.max_retries
@@ -132,7 +136,7 @@ class OpenAITranslator(BaseBatchTranslator):
                     ],
                 )
                 self.last_request_at = time.time()
-                content = response.choices[0].message.content or "[]"
+                content = _extract_openai_chat_content(response)
                 translated = _parse_translated_content(content, len(texts))
                 return [str(item) for item in translated]
             except Exception as exc:
@@ -154,7 +158,7 @@ class OpenAICompatibleTranslator(BaseBatchTranslator):
             return []
 
         self._sleep_if_needed()
-        prompt = self._build_prompt(self.config.source_lang, self.config.target_lang)
+        prompt = self._build_prompt(self.config.source_lang, self.config.target_lang, self.config.domain)
         payload = {
             "model": self.config.model,
             "temperature": self.config.temperature,
@@ -228,6 +232,9 @@ def _parse_translated_content(content: str, expected_len: int) -> List[str]:
     text = (content or "").strip()
     if not text:
         raise ValueError("翻译返回为空")
+    lowered = text.lower()
+    if "<!doctype html" in lowered or "<html" in lowered:
+        raise ValueError("上游返回了 HTML 页面，请检查 provider/base_url/endpoint 配置")
 
     candidates = [text]
     code_block_match = re.search(r"```(?:json)?\s*(.*?)\s*```", text, re.DOTALL | re.IGNORECASE)
@@ -260,3 +267,51 @@ def _parse_translated_content(content: str, expected_len: int) -> List[str]:
         return [text]
 
     raise ValueError("翻译返回长度与输入不一致")
+
+
+def _extract_openai_chat_content(response: Any) -> str:
+    if response is None:
+        return "[]"
+
+    if hasattr(response, "choices"):
+        choices = getattr(response, "choices")
+        if choices:
+            first = choices[0]
+            message = getattr(first, "message", None)
+            if message is not None:
+                content = getattr(message, "content", None)
+                if content is not None:
+                    return str(content)
+
+    if isinstance(response, dict):
+        error_info = response.get("error")
+        if error_info:
+            if isinstance(error_info, dict):
+                message = str(error_info.get("message", ""))
+                raise RuntimeError(message or "上游返回错误")
+            raise RuntimeError(str(error_info))
+        choices = response.get("choices")
+        if isinstance(choices, list) and choices:
+            first = choices[0]
+            if isinstance(first, dict):
+                message = first.get("message")
+                if isinstance(message, dict):
+                    content = message.get("content")
+                    if content is not None:
+                        return str(content)
+        return json.dumps(response, ensure_ascii=False)
+
+    if isinstance(response, str):
+        candidate = response.strip()
+        if not candidate:
+            return "[]"
+        lowered = candidate.lower()
+        if "<!doctype html" in lowered or "<html" in lowered:
+            raise RuntimeError("上游返回了 HTML 页面，请检查 provider/base_url/endpoint 配置")
+        try:
+            parsed = json.loads(candidate)
+            return _extract_openai_chat_content(parsed)
+        except json.JSONDecodeError:
+            return candidate
+
+    return str(response)

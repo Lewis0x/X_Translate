@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Syntax check
+        run: |
+          python -m py_compile run.py webapp.py doc_translator/*.py doc_translator/adapters/*.py
+
+      - name: Validate config samples and manifest
+        run: |
+          python - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          sample = Path('local.config.sample.json')
+          assert sample.exists(), 'missing local.config.sample.json'
+          data = json.loads(sample.read_text(encoding='utf-8'))
+          for key in ['LLM_PROVIDER', 'LLM_MODEL', 'OPENAI_ENDPOINT', 'LLM_ENDPOINT']:
+              assert key in data, f'missing key in sample config: {key}'
+
+          manifest = Path('office_addin/manifest.xml')
+          assert manifest.exists(), 'missing office add-in manifest'
+          ET.fromstring(manifest.read_text(encoding='utf-8'))
+          print('config + manifest validation passed')
+          PY
+
+      - name: Flask route smoke test
+        run: |
+          python - <<'PY'
+          from webapp import app
+
+          client = app.test_client()
+          r1 = client.get('/')
+          assert r1.status_code == 200, f'GET / failed: {r1.status_code}'
+
+          r2 = client.get('/office/addin')
+          assert r2.status_code == 200, f'GET /office/addin failed: {r2.status_code}'
+
+          r3 = client.get('/office/manifest.xml')
+          assert r3.status_code == 200, f'GET /office/manifest.xml failed: {r3.status_code}'
+
+          r4 = client.post('/api/translate_text', json={'text': ''})
+          assert r4.status_code == 400, f'validation failed for /api/translate_text: {r4.status_code}'
+
+          r5 = client.post('/api/translate_batch', json={'texts': []})
+          assert r5.status_code == 400, f'validation failed for /api/translate_batch: {r5.status_code}'
+
+          print('route smoke tests passed')
+          PY
