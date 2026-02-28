@@ -1,0 +1,6 @@
+source,target,case_sensitive,lock
+earnings per share,EPS,false,false
+cash flow,cash flow,false,false
+balance sheet,balance sheet,false,false
+gross margin,gross margin,false,false
+EBITDA,EBITDA,true,true

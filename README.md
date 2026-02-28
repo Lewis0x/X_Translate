@@ -151,6 +151,19 @@ python run.py --input ./test_materials --target en --source auto --domain legal
 
 - 已提供 `test_materials/` 目录用于放置测试文件。
 - 可按场景自行建子目录（如 `legal/`、`finance/`）。
+- 已提供场景术语模板目录 `test_materials/glossary_templates/`：
+	- `general_glossary.csv`
+	- `legal_glossary.csv`
+	- `finance_glossary.csv`
+	- `it_glossary.csv`
+	- `medical_glossary.csv`
+	- `academic_glossary.csv`
+
+示例：
+
+```bash
+python run.py --input ./test_materials --target en --source auto --domain legal --glossary ./test_materials/glossary_templates/legal_glossary.csv
+```
 
 运行后会在输出目录生成：
 

@@ -1,0 +1,6 @@
+source,target,case_sensitive,lock
+X_Translate,X_Translate,true,true
+API,API,true,true
+SLA,SLA,true,true
+high availability,high availability,false,false
+throughput,throughput,false,false

@@ -1,0 +1,6 @@
+source,target,case_sensitive,lock
+latency,latency,false,false
+microservice,microservice,false,false
+container,container,false,false
+service mesh,service mesh,false,false
+Kubernetes,Kubernetes,true,true

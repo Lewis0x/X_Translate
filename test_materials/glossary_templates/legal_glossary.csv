@@ -1,0 +1,6 @@
+source,target,case_sensitive,lock
+Party A,Party A,true,true
+Party B,Party B,true,true
+indemnification,compensation,false,false
+governing law,applicable law,false,false
+jurisdiction,jurisdiction,false,false
