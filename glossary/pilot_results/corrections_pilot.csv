@@ -1,0 +1,160 @@
+﻿English,Correct_Czech,AI_Czech,Match_Desc
+%d entities selected,%d vybrané entity,Vybráno %d entit,mismatch
+%s - PCL Properties Dialog,%s - Panel vlastností PCL,%s - dialogové okno Vlastnosti PCL,mismatch
+&Break Size:,Velikost p&řerušení:,&Velikost přestávky:,mismatch
+&Scale of Fraction:,M&ěřítko Frakce:,&Měřítko zlomku:,mismatch
+&Starting Arrowhead,&Počáteční šipka,&Startovací šipka,mismatch
+(Block selected),(Vybraný blok),(Vybrán blok),mismatch
+** ITEM SPACING **,** ROZTEČ POLOŽEK **,** VZDÁLENOST POLOŽEK **,mismatch
+** MOVE WITH LEADER **,** POSUNOUT TEXT S ODKAZEM **,** POHYB S VŮDCI **,mismatch
+3Point _3Point,3Body _3Point,3bod _3bod,mismatch
+<Group on>,<Skupina ano>,<Skupina zapnuta>,mismatch
+<SLIDEOUT>,<SLIDEOUT>,<VYSUNUTÍ>,mismatch
+"\n%ls already exists, do you want to replace it? [Yes/No]\n","\n%ls již existuje, chcete ho nahradit? [Ano/Ne]\n","\n%ls již existuje, chcete jej nahradit? [Ano/Ne]\n",mismatch
+\nAbort:,\nZrušit:,\nPřerušit:,mismatch
+\nArc/Distance/Follow/Halfwidth/Width/<Next point>:,\nOblouk/vzDálenost/Sledovat/Pološířka/šířKa/<déLka bod>:,\nOblouk/Vzdálenost/Následovat/Poloviční šířka/Šířka/<Další bod>:,mismatch
+\nCannot create plane surface due to following endpoints not co-incident:,"\nNelze vytvořit rovinný povrch kvůli následujícím koncovým bodům, které nejsou společné:","\nNelze vytvořit rovinný povrch, protože následující koncové body nejsou shodné:",mismatch
+\nChamfer mode now set to Distance method.,\nMetoda zkosení je nastavena na vzdálenost.,\nRežim zkosení je nyní nastaven na Distance method.,mismatch
+\nEdge selection has been completely undone,\nVýběr hrany byl celkově vrácen zpět,\nVýběr okraje byl zcela zrušen,mismatch
+\nEnter a gradient name or [?/Single color/Two color] <%ls>:,\nZadejte název gradientu nebo [?/Jedna barva/Dvě barvy] <%ls>:,\nZadejte název přechodu nebo [?/Jedna barva/Dvě barvy] <%ls>:,mismatch
+\nEnter description <%ls>:,\nZadat popis <%ls>:,\nZadejte popis <%ls>:,mismatch
+\nEnter new crop state name:,\nZadejte nový název stavu oříznutí:,\nZadejte název nového stavu oříznutí:,mismatch
+\nEnter PDF underlay option [Fade/Contrast/Monochrome] <%ls>:,\nZadejte možnost PDF podložení [Vybledlý/Kontrastní/Černobílý] <%ls>:,\nZadejte možnost podložení PDF [Fade/Contrast/Monochrome] <%ls>:,mismatch
+\nEnter search directory and drawing name <%s>:,\nZadejte hledaný adresář a název výkresu <%s>:,\nZadejte vyhledávací adresář a název výkresu <%s>:,mismatch
+\nEnter the name(s) of Xref to bind <*>:,\nZadejte název Xref pro vázání <*>:,\nZadejte název (názvy) Xref pro vazbu <*>:,mismatch
+\nFail to read database.,\nSelhání čtení databáze.,\nNelze přečíst databázi.,mismatch
+\nFile %s not found.,\nSoubor %s nenalezen.,\nSoubor %s nebyl nalezen.,mismatch
+\nInput units number in modal space <1.0>:,\nZadejte počet jednotek v modelovém prostoru <1.0>:,\nZadejte počet jednotek v modálním prostoru <1.0>:,mismatch
+\nLast saved by: %s,\nNaposledy uložil: %s,\nNaposledy uloženo: %s,mismatch
+\nLines with coincident endpoints are needed.,\nJsou požadovány shodné koncové body.,\nJsou potřeba řádky se shodnými koncovými body.,mismatch
+"\nLinetype definition (positive numbers for lines, negative for spaces): \n  A,","\nDefinice typu čáry (kladné čísla pro čáry, záporné pro mezery): \n  A,","\nDefinice typu čáry (kladná čísla pro řádky, záporná pro mezery): \n A,",mismatch
+\nNo 3dSolids selected.,\nNebylo vybráno žádné 3D Těleso.,\nNení vybrán žádný 3dSolids.,mismatch
+"\nPlot scale can't be 0, please input again.","\nMěřítko tisku nemůže být 0, vložte prosím znovu.","\nMěřítko grafu nemůže být 0, zadejte prosím znovu.",mismatch
+\nSelect objects or [SIngle/Show all/Hide all/Reset all]:,\nVybrat objekty nebo [Jednotlivě/Zobrazit vše/Skrýt vše/Resetovat vše]:,\nVyberte objekty nebo [JEDNO/Zobrazit vše/Skrýt vše/Obnovit vše]:,mismatch
+\nSelect objects whose layer is to be changed:,\nVybrat objekty které se mají změnit:,"\nVyberte objekty, jejichž vrstva se má změnit:",mismatch
+"\nSelect objects: 1 found, filtered, total %d","\nVybrat objekty: 1 nalezeno, filtrované, %d celkem","\nVyberte objekty: 1 nalezeno, filtrováno, celkem %d",mismatch
+\nSpecify parameter point to associate with action or enter [Base point/Second point/Xcorner/Ycorner]%ls:,\nUrčete bod parametru pro asociaci s akcí nebo zadejte [Základní bod/Druhý bod/Xroh/Yroh]%ls:,"\nZadejte bod parametru, který chcete přiřadit k akci, nebo zadejte [Základní bod/Druhý bod/Xcorner/Ycorner]%ls:",mismatch
+\nSpecify start point or [Name/Label/Chain/Description/Base/Palette/Value set]:,\nUrčete počáteční bod nebo [Název/Štítek/Řetězec/Popis/Základní/pAleta/Hodnota nastavení]:,\nUveďte počáteční bod nebo [Název/Štítek/Řetěz/Popis/Základ/Paleta/Sada hodnot]:,mismatch
+\nSpecify the first point or [Method/Degree/Object]:,\nZadejte první bod nebo [Metoda/Stupeň/Objekt]:,\nUrčete první bod nebo [Metoda/Stupeň/Objekt]:,mismatch
+\nSpecify the location of dimension arc line or [Mtext/Text/Angle]:,\nUrčit umístění obloukové kóty nebo [Mtext/Text/Úhel]:,\nUrčete umístění kótovací obloukové čáry nebo [Mtext/Text/Úhel]:,mismatch
+\nSpecify the next point or [Angle/Length/Follow/Undo]:,\nUrčete další bod nebo [Úhel/Délka/Sledovat/Zpět]:,\nUrčete další bod nebo [Úhel/Délku/Následovat/Zpět]:,mismatch
+\nSpecify the offset distance of polygon or [Radius/Equidistant/Undo] <%ls>:,\nUrčete vzdálenost odsazení mnohoúhelníku nebo [poloměR/Odsazení/Zpět] <%ls>:,\nUrčete vzdálenost odsazení polygonu nebo [Radius/Equidistant/Undo] <%ls>:,mismatch
+"\nThe block ""%ls"" already exists. Would you like to redefine it?","\nBlok ""%ls"" již existuje. Chcete ho předefinovat?","\nBlok ""% ls"" již existuje. Chtěli byste to předefinovat?",mismatch
+\nTimer is off.,\nČasovač vypnut.,\nČasovač je vypnutý.,mismatch
+A valid distance is needed. Please try again.,Je potřeba platná vzdálenost. Zkuste to prosím znovu.,Je vyžadována platná vzdálenost. Zkuste to prosím znovu.,mismatch
+Alt sub-zero factor,Alt sub-zero faktor,Alt mínus faktor,mismatch
+Always Display as WYSIWYG,Vždy zobrazit jako WYSIWYG,Vždy zobrazovat jako WYSIWYG,mismatch
+Ang type,Typ úhlu,Typ Ang,mismatch
+Annotation scale is not equal to viewport scale: Click to synchronize,Poznámkové měřítko není rovno měřítku výřezu: Klikněte pro synchronizaci,Měřítko anotace se nerovná měřítku výřezu: Klepnutím synchronizujte,mismatch
+Arc Dimension,Kóta oblouku,Dimenze oblouku,mismatch
+Arc Length Total Undo Close _Arc Length Total Undo Close,Oblouk Délka Celkový Zpět Uzavři _Arc Length Total Undo Close,Délka oblouku Celkem Zpět Zavřít _Délka oblouku Celkem Zpět Zavřít,mismatch
+Archive,Archivní,Archiv,partial
+Array - Associative Path Array,Pole - Asociativní cesta pole,Pole - Asociativní pole cest,mismatch
+Attach DWG,Přiložit DWG,Připojte DWG,mismatch
+ATTIPEDIT,ATIPEDIT,ATTIPEDIT,mismatch
+Autosave file:,Soubor Autoulož:,Automatické ukládání souboru:,mismatch
+Blocks Dimstyles Groups LAyers LTypes Printstyles SHapes textSTyles Tablestyles Mlinestyles MUltileaderstyles Regapp Zero Empty All _Blocks Dimstyles Groups LAyers LTypes Printstyles SHapes textSTyles Tablestyles Mlinestyles MUltileaderstyles Regapp Zero Empty All,Bloky Kótovacístyly Skupiny Hladiny TYpyčar stylyTisku TVary stylyTExtu stylyTAbulek stylyMUltičar STyly Regapp Geometrie Prázdné Vše _Blocks Dimstyles Groups LAyers LTypes Printstyles SHapes textSTyles Tablestyles Mlinestyles MUltileaderstyles Regapp Zero Empty All,Bloky Dimstyles Skupiny Vrstvy LTypy Styly tisku TVARY textStyly Styly tabulek Mlinestyles VÍCE stylů aderů Regapp Zero Empty All _Blocks Dimstyles Skupiny Vrstvy LTypes Styly tisku TVARY textSTyly Styly tabulek Mlinestyles VÍCE APLIKACE Zero prázdné Styly Regapp,mismatch
+BOUNDARY,HKŘIVKA,HRANICE,mismatch
+ByValue,DleHodnoty,Podle hodnoty,mismatch
+Changes the alignment of paragraphs to middle center,Změní zarovnání odstavců na střední centr,Změní zarovnání odstavců na střed,partial
+Changes the color of a selected dimension text: DIMTXTCOL,Změní farbu vybraného textu kóty: DIMTXTCOL,Změní barvu vybraného textu kóty: DIMTXTCOL,mismatch
+Check here to delete files,Klikněte zde pro odstranění souborů,"Chcete-li soubory odstranit, zaškrtněte zde",mismatch
+Circular,Kruhový,Oběžník,mismatch
+Clear,Vyčistit,Jasný,mismatch
+Close dialog anyway?,I přesto zavřít dialog?,Přesto zavřít dialog?,partial
+Confirm New Tool Installation,Potvrdit Instalaci Nového Nástroje,Potvrďte instalaci nového nástroje,mismatch
+Confirm Rematch Exit _Confirm Rematch Exit,Potvrdit Rematch Konec _Confirm Rematch Exit,Confirm Rematch Exit _Confirm Rematch Exit,mismatch
+Confirm Tool Palette Deletion,Potvrdit odstranění palety,Potvrďte odstranění palety nástrojů,mismatch
+Convert to:,Konvertovat na:,Převést na:,mismatch
+Copyright notice of the person or organization that claims the copyright to the image. The complete copyright statement should be listed in this field including any dates and statements of claims.,"Informace o autorských právech osoby nebo organizace, která uplatňuje autorská práva k obrázku. V tomto poli by mělo být uvedeno kompletní prohlášení o autorských právech včetně dat a prohlášení o nárocích.","Upozornění na autorská práva osoby nebo organizace, která si nárokuje autorská práva k obrázku. V tomto poli by mělo být uvedeno úplné prohlášení o autorských právech včetně všech dat a prohlášení o nárocích.",mismatch
+Correlation information contained in World Files,Informace o korelaci obsažené ve světových souborech,Korelační informace obsažené ve World Files,mismatch
+Creates a circle using a specified radius: CIRCLE,Vytvoří kružnici pomocí zadaného poloměru:  KRUŽNICE,Vytvoří kruh pomocí zadaného poloměru: CIRCLE,mismatch
+Custom properties:,Uživatelské vlastnosti:,Vlastní vlastnosti:,mismatch
+Customization Files,Soubory uživatelských úprav,Soubory přizpůsobení,mismatch
+DIMSPACE,KÓTMEZERA,DIMSPACE,mismatch
+Display printable area,Zobrazit tisknutelnou plochu,Zobrazte oblast tisku,mismatch
+Displays the name of the block,Zobrazí název bloku,Zobrazuje název bloku,mismatch
+Drawing View Editor,Editor zobrazení výkresu,Editor pohledu výkresu,mismatch
+DWG Compare - Change Set,Porovnání DWG - Nastavení změn,Porovnání DWG - Změnit sadu,mismatch
+Electrical Professional Edition,Elektro profesionální verze,Electrical Professional Edition,mismatch
+Enter an option [Cascade/tile Horizontal/tile Vertical/Arrange icons] <Cascade>:,Zadejte možnost [Kaskáda/dlaždiceHor/dlaždiceVer/Uspořádat ikony] <Kaskáda>:,Zadejte možnost [Kaskáda/dlaždice vodorovně/dlaždice svisle/Uspořádat ikony] <Kaskáda>:,mismatch
+Enter variable(s) to list <*>:,Do seznamu vložte systém proměnných <*>:,Zadejte proměnné do seznamu <*>:,mismatch
+"Executes UPDATEFIELD command and selects the object to update, the latest value of the field in this object will be displayed. The Date field cannot be automatically updated by FIELDEVAL methods; it can only be manually updated by UPDATEFIELD command.","Provede příkaz AKTUALIZUJTPOLE a vybere objekt k aktualizaci, zobrazí se nejnovější hodnota pole v tomto objektu. Pole Datum nelze automaticky aktualizovat metodami FIELDEVAL; lze jej aktualizovat pouze ručně příkazem AKTUALIZUJTPOLE.","Provede příkaz UPDATEFIELD a vybere objekt k aktualizaci, zobrazí se nejnovější hodnota pole v tomto objektu. Pole Datum nelze automaticky aktualizovat metodami FIELDEVAL; lze jej aktualizovat pouze ručně příkazem UPDATEFIELD.",mismatch
+expecting class,očekává kategorii,očekávat třídu,mismatch
+expecting keyword variable,očekává proměnnou klíčového slova,očekává se proměnná klíčového slova,mismatch
+Export DGN File,Export soubor DGN,Export souboru DGN,mismatch
+Find Text Control,Najít kontrolu textu,Najít ovládací prvek textu,mismatch
+Floating Order,Plovoucí pořadí,Plovoucí objednávka,mismatch
+Foreground lines,Čáry popředí,čáry v popředí,mismatch
+Hidden Scale Visibility Projection Depth Annotation hatCh eXit accept _Hidden Scale Visibility Projection Depth Annotation hatCh eXit accept,Skryté Měřítko Viditelnost pRůmět Hloubka Poznámka Šrafy Konec accept _Hidden Scale Visibility Projection Depth Annotation hatCh eXit accept,Skrytá škála Viditelnost projekce Hloubka projekce šrafování šrafování eXit přijetí přijetí,mismatch
+Hor type,Vodorovný typ,Typ Hor,mismatch
+Horizontal Bars,Horizontání výlň,Vodorovné pruhy,mismatch
+Horizontal minimum: %9.16q0\n,Horizontální minimum: %9.16q0\n,"Horizontální minimum: %9,16q0\n",mismatch
+Input Properties,Vložit vlastnosti,Vlastnosti vstupu,mismatch
+Landing distance,Vzdálenost prodloužení,Vzdálenost přistání,mismatch
+LAYWALK,HLADPROCH,LAYWALK,mismatch
+Leica Pts Files (*.pts)|*.pts|,Soubor Leica Pts (*.pts)|*.pts|,Soubory Leica Pts (*.pts)|*.pts|,mismatch
+Model and layout space,Modelový a rozvržení prostor,Modelový a dispoziční prostor,mismatch
+Mtext _Mtext,Otext _Mtext,Mtext _Mtext,mismatch
+Multilines Edit tools,Nástroje úpravy multičáry,Nástroje pro úpravy multičar,mismatch
+Never Shrink,Nikdy nezmenšovat,Nikdy se nezmenšovat,mismatch
+New style,Nové písmo,Nový styl,mismatch
+Orange,Oranžová,Pomerančový,mismatch
+Outward from center,Ven ze středu,Vně od středu,mismatch
+Page setup is not found,Nastavení stránky nenalezeno,Nastavení stránky nebylo nalezeno,mismatch
+Pastes a hyperlink to the selected object:   PASTEASHYPERLINK,Vloží hypertextový odkaz k vybranému objektu:  VLOŽJAKOHYPERLINK,Vloží hypertextový odkaz na vybraný objekt: PASTEASHYPERLINK,mismatch
+Path Array - Options,Cesta pole - Možnosti,Path Array - Možnosti,mismatch
+Plain Washers M10_Top,Podložky M10_Shora,Hladké podložky M10_Top,mismatch
+Please enter a positive integer number.,Zadejte prosím kladné celé číslo.,Zadejte kladné celé číslo.,mismatch
+PLTPLOT,PLTTISK,PLTPLOT,mismatch
+"Purged %ls ""%ls""\n","Vyčištěno %ls ""%ls""\n","Vymazáno %ls ""%ls""\n",mismatch
+Red Yellow Green Cyan Blue Magenta White BYBlock BYLayer Truecolor COlorbook _Red Yellow Green Cyan Blue Magenta White BYBlock BYLayer Truecolor COlorbook,čeRvená žLutá Zelená Svmodrá Modrá Fialová Bílá DLEBlok DLEHlad Truecolor Kniha _Red Yellow Green Cyan Blue Magenta White BYBlock BYLayer Truecolor COlorbook,Červená Žlutá Zelená Azurová Modrá Purpurová Bílá BYBlock BYLayer Truecolor COlorbook _Červená Žlutá Zelená Azurová Modrá Purpurová Bílá BYBlock BYLayer Truecolor COlorbook,mismatch
+Remove Sheets,Odstranit listy,Odebrat listy,mismatch
+Restrict _Search to:,Omezit_hledání na:,Omezit _Search na:,mismatch
+Return _Borrowed License,Vrátit _Vypůjčenou licenci,Vraťte _Vypůjčenou licenci,mismatch
+Ribbon Toggle Button - DWF Osnap,Přepínací tlačítko pásu karet - úchopové body DWF,Tlačítko přepínání pásu karet – DWF uchycení,mismatch
+Rotate Camera,Natočit kameru,Otočte kameru,mismatch
+Save changed to VBA project %s?\n,Uložit změny do VBA Projektu %s?\n,Uložit změněno na projekt VBA %s?\n,mismatch
+Select a paper size for your test plot:,Vybrat velikost papíru k testování vykreslování:,Vyberte velikost papíru pro testovací obrázek:,mismatch
+Select Slide File,Zvolte soubor snímku,Vyberte Soubor snímku,mismatch
+Selected: %d,Vybrané: %d,Vybráno: %d,mismatch
+"Selects an object to change its layers in the drawing, and then selects an object on the destination layer. The selected object to change its layer will be moved to the layer of the destination object. The number of objects moved and the name of the destination layer will be displayed in the command line.","Vybere objekt, který má ve výkresu změnit jeho hladiny, a poté vybere objekt v cílové hladině. Vybraný objekt, jehož hladinu chcete změnit, se přesune do hladiny cílového objektu. Na příkazovém řádku se zobrazí počet přemístěných objektů a název cílové hladiny.","Vybere objekt pro změnu jeho vrstev ve výkresu a poté vybere objekt v cílové vrstvě. Vybraný objekt, jehož vrstvu chcete změnit, se přesune do vrstvy cílového objektu. Na příkazovém řádku se zobrazí počet přemístěných objektů a název cílové vrstvy.",mismatch
+Sets drawing of dimension lines outside extension lines On or Off (DIMSOXD system variable),Nastaví kreslení kótovací čáry mimo vynášecí čáry na Zapnuto nebo Vypnuto (systémová proměnná DIMSOXD),Zapne nebo vypne kreslení kótovacích čar mimo vynášecí čáry (systémová proměnná DIMSOXD),mismatch
+Sets running object snap modes: OSNAP,Nastavuje průběžné uchopovací režimy.:  UCHOP,Nastavuje spuštěné režimy uchopení objektů: OSNAP,mismatch
+Sets the gridLineWeight value for the specified gridLineType(s) and row type(s),Nastaví hodnotu tloušťky čáry mřížky pro daný typ(y) čáry mřížky a typ(y) řádku,Nastaví hodnotu gridLineWeight pro zadané typy gridLineType a typy řádků,mismatch
+Sets the layer and views the thumbnails of objects in the layer: LAYERBROWSER,Nastaví hladinu a zobrazení miniatury objektů v hladině:  PROHLHLAD,Nastaví vrstvu a zobrazí miniatury objektů ve vrstvě: LAYERBROWSER,mismatch
+Sets the view point to southeast isometric: VIEW,Nastaví bod pohledu na iso jihovýchodní.:  POHLED,Nastaví bod pohledu na jihovýchodní izometrický: VIEW,mismatch
+SHADEMODE,STÍNREŽIM,SHADEMODE,mismatch
+Show lock icon for annotational constraints,Zobraziz ikonu zámku pro poznámkové vazby,Zobrazit ikonu zámku pro omezení poznámek,mismatch
+Shows the preview of dimension input.,Zobrazuje náhled zadávání rozměrů.,Zobrazuje náhled zadání kóty.,mismatch
+Snap the endpoint of the object.,Uchopte koncový bod objektu.,Přichyťte koncový bod objektu.,mismatch
+Specifies block of the dimension arrowhead,Určí blok kótovací šipky,Určuje blok šipky kóty,mismatch
+Specifies the hatch pattern spacing,Určuje rozteč šrafovacího vzoru,Určuje rozteč šrafovacích vzorů,mismatch
+Specifies the thickness of the object,Řídí tloušťku objektu,Určuje tloušťku objektu,mismatch
+Specifies the thickness of the trace,Určí tloušťku trasování,Určuje tloušťku stopy,mismatch
+Specifies the verify mode of the attribute,Řídí ověřovaný režim atributu,Určuje režim ověření atributu,mismatch
+"Specifies the X, Y, and Z coordinates of the start point of the arc","Určí souřadnice X, Y a Z počátečního bodu oblouku","Určuje souřadnice X, Y a Z počátečního bodu oblouku",mismatch
+Specifies the Z coordinate of center point for drawing view,Určuje souřadnici Z středového bodu pro zobrazení výkresu,Určuje souřadnici Z středového bodu pro pohled výkresu,mismatch
+"Specify a unique identity string for the command. The program will automatically specify the default ID, but it can be modified to a logical ID for the program reference.","Určete jedinečný identifikační řetězec pro příkaz. Program automaticky určí výchozí ID, ale může být upraven na logické ID pro odkaz na program.","Zadejte jedinečný řetězec identity pro příkaz. Program automaticky určí výchozí ID, ale lze jej upravit na logické ID pro referenci programu.",mismatch
+STEP Import,STEP Import,Import STEP,mismatch
+Straight;Spline;None,Přímá;Spline;Žádná,Rovný; Spline; Žádný,mismatch
+Successfully picked up the text,Text byl úspěšně vybrán,Text byl úspěšně vyzvednut,mismatch
+Text\nStyle,Styl\nTextu,Text\nStyl,mismatch
+"The Additional Rows value you entered is invalid, please enter 0 or a positive integer.","Zadaná hodnota přidaných řádků je neplatná, zadejte prosím 0 nebo kladné celé číslo.","Zadaná hodnota dalších řádků je neplatná, zadejte prosím 0 nebo kladné celé číslo.",mismatch
+The check function is disabled while %s command is in progress.,Funkce kontroly není povolena pokud příkaz %s probíhá.,"Funkce kontroly je deaktivována, když probíhá příkaz %s.",mismatch
+The layout will not be plotted unless a new plotter configuration name is selected.,Rozvržení nebude vykresleno pokud nebude vybrán nový název konfigurace plotru.,"Rozvržení nebude vykresleno, pokud není vybrán nový název konfigurace plotru.",mismatch
+The requested operation can't be completed because of an invalid configuration. Ensure that a valid configuration is specified.,Požadovaná operace nemůže být dokončena protože je neplatná konfigurace. Ujistěte se že platná konfigurace je určena.,"Požadovanou operaci nelze dokončit z důvodu neplatné konfigurace. Ujistěte se, že je zadána platná konfigurace.",mismatch
+The vertical offset from the top of the page.,Svislé odsazení od horní části stránky.,Svislý posun od horní části stránky.,mismatch
+There are no registered modules to edit fields or demand loading is currently disabled,Nejsou žádné registrované moduly pro úpravu polí nebo požadavek načtení není právě povolen,Nejsou k dispozici žádné registrované moduly pro úpravu polí nebo je načítání poptávky aktuálně zakázáno,mismatch
+This print style table can be plotted to any type output device (unlike R14 pen settings).,Na rozdíl od nastavení per R14 lze tabulku stylu vykreslování vykreslit na libovolném zařízení.,Tuto tabulku stylu tisku lze vykreslit na libovolné výstupní zařízení (na rozdíl od nastavení pera R14).,mismatch
+Timeout (milliseconds),Timeout (milisekundy),Časový limit (milisekundy),mismatch
+"Too many objects would be created.\nThe current array values would create approximately %d objects, exceeding the limit of %d objects","Bylo by vytvořeno příliš mnoho objektů.\nAktuální hodnoty pole by vytvořily přibližně %d objektů, přesahující limit %d objektů","Bylo by vytvořeno příliš mnoho objektů.\nAktuální hodnoty pole by vytvořily přibližně %d objektů, což by překročilo limit %d objektů",mismatch
+Twist along path,Zkroucení podél dráhy,Twist podél cesty,mismatch
+Unable to locate the DOSLib help file.\nPlease locate the help file.,Nelze najít soubor nápovědy DOSLib.\nVyhledejte prosím soubor nápovědy.,Nelze najít soubor nápovědy DOSLib.\nNajděte prosím soubor nápovědy.,mismatch
+Unable To Update Data,Data nelze aktualizovat,Nelze aktualizovat data,mismatch
+Unrecognized operator.\n,Nerozpoznatelný operátor.\n,Neznámý operátor.\n,mismatch
+Unstack,Zrušit seskupení,Rozbalit,mismatch
+Use Wildcard,Použít zástupný znak,Použijte zástupný znak,mismatch
+Varies,Různé,Liší se,mismatch
+X Center,Střed X,X centrum,mismatch
+{0} drawing,Výkres aplikace {0},{0} kresba,mismatch
