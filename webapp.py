@@ -20,6 +20,11 @@ from werkzeug.utils import secure_filename
 from doc_translator.config import is_pid_alive
 from doc_translator.config import load_local_config
 from doc_translator.glossary import Glossary
+from doc_translator.pdf_printer import EngineNotAvailableError
+from doc_translator.pdf_printer import PdfPrinterError
+from doc_translator.pdf_printer import UnsupportedFormatError
+from doc_translator.pdf_printer import detect_engine
+from doc_translator.pdf_printer import print_many
 from doc_translator.translator import TranslationConfig
 from doc_translator.translator import create_translator
 from doc_translator.web_state import make_initial_state
@@ -32,6 +37,8 @@ app = Flask(__name__)
 workspace_root = Path(__file__).resolve().parent
 jobs_root = workspace_root / "web_runs"
 jobs_root.mkdir(parents=True, exist_ok=True)
+pdf_root = workspace_root / "web_runs" / "_pdf_prints"
+pdf_root.mkdir(parents=True, exist_ok=True)
 
 _jobs: dict[str, dict[str, Any]] = {}
 
@@ -151,6 +158,250 @@ def create_job():
         return jsonify({"error": f"任务启动失败: {exc}"}), 500
 
     return jsonify({"job_id": job_id})
+
+
+@app.get("/api/pdf/engine")
+def get_pdf_engine():
+    """查询当前可用的 PDF 转换引擎。"""
+    try:
+        engine = detect_engine()
+    except EngineNotAvailableError as exc:
+        return jsonify({"available": False, "error": str(exc)}), 200
+    return jsonify(
+        {
+            "available": True,
+            "engine": engine.name,
+            "description": engine.description,
+            "executable": engine.executable,
+        }
+    )
+
+
+@app.post("/api/print_pdf")
+def print_pdf():
+    """将一个或多个文档打印为 PDF。
+
+    接收 multipart/form-data，字段名为 ``files``。
+    - 单文件：直接返回 PDF
+    - 多文件：打包为 zip 返回
+
+    若部分文件失败，仍会返回成功的文件打包；失败信息写入响应头 ``X-PDF-Errors``。
+    """
+    files = request.files.getlist("files")
+    valid_files = [file for file in files if file and file.filename]
+    if not valid_files:
+        return jsonify({"error": "请至少选择一个文件"}), 400
+
+    try:
+        engine = detect_engine()
+    except EngineNotAvailableError as exc:
+        return jsonify({"error": str(exc)}), 503
+
+    task_id = uuid.uuid4().hex[:12]
+    task_dir = pdf_root / task_id
+    input_dir = task_dir / "input"
+    output_dir = task_dir / "output"
+    input_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    saved_inputs: list[Path] = []
+    for file in valid_files:
+        safe_name = secure_filename(file.filename) or f"file_{len(saved_inputs) + 1}"
+        target_path = input_dir / safe_name
+        file.save(target_path)
+        saved_inputs.append(target_path)
+
+    try:
+        results = print_many(saved_inputs, output_dir, engine=engine)
+    except PdfPrinterError as exc:
+        return jsonify({"error": f"PDF 打印失败: {exc}"}), 500
+
+    successful = [pdf for _input, pdf, err in results if pdf and not err]
+    errors = [
+        {"file": str(src.name), "error": err}
+        for src, _pdf, err in results
+        if err
+    ]
+
+    if not successful:
+        return (
+            jsonify(
+                {
+                    "error": "所有文件均打印失败",
+                    "details": errors,
+                }
+            ),
+            500,
+        )
+
+    # 单个成功文件 → 直接返回
+    if len(successful) == 1 and not errors:
+        response = send_file(
+            successful[0],
+            as_attachment=True,
+            download_name=successful[0].name,
+            mimetype="application/pdf",
+        )
+        response.headers["X-PDF-Engine"] = engine.name
+        return response
+
+    # 多文件 → 打包为 zip
+    zip_path = task_dir / f"{task_id}_pdfs.zip"
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for pdf in successful:
+            zf.write(pdf, arcname=pdf.name)
+
+    response = send_file(
+        zip_path,
+        as_attachment=True,
+        download_name=f"pdf_prints_{task_id}.zip",
+        mimetype="application/zip",
+    )
+    response.headers["X-PDF-Engine"] = engine.name
+    if errors:
+        response.headers["X-PDF-Errors"] = json.dumps(errors, ensure_ascii=False)
+    return response
+
+
+@app.post("/api/print_pdf/json")
+def print_pdf_json():
+    """与 ``/api/print_pdf`` 类似，但返回 JSON（包含每个文件的成功/失败信息与下载路径）。
+
+    便于前端在批量场景下分别展示每个文件的状态。
+    """
+    files = request.files.getlist("files")
+    valid_files = [file for file in files if file and file.filename]
+    if not valid_files:
+        return jsonify({"error": "请至少选择一个文件"}), 400
+
+    try:
+        engine = detect_engine()
+    except EngineNotAvailableError as exc:
+        return jsonify({"error": str(exc)}), 503
+
+    task_id = uuid.uuid4().hex[:12]
+    task_dir = pdf_root / task_id
+    input_dir = task_dir / "input"
+    output_dir = task_dir / "output"
+    input_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    saved_inputs: list[Path] = []
+    for file in valid_files:
+        safe_name = secure_filename(file.filename) or f"file_{len(saved_inputs) + 1}"
+        target_path = input_dir / safe_name
+        file.save(target_path)
+        saved_inputs.append(target_path)
+
+    results = print_many(saved_inputs, output_dir, engine=engine)
+    items = []
+    for src, pdf, err in results:
+        items.append(
+            {
+                "input": src.name,
+                "status": "success" if pdf and not err else "failed",
+                "pdf": pdf.name if pdf else None,
+                "download_url": f"/api/print_pdf/{task_id}/download/{pdf.name}" if pdf else None,
+                "error": err,
+            }
+        )
+
+    return jsonify(
+        {
+            "task_id": task_id,
+            "engine": engine.name,
+            "results": items,
+        }
+    )
+
+
+@app.get("/api/print_pdf/<task_id>/download/<path:filename>")
+def download_printed_pdf(task_id: str, filename: str):
+    """下载单个已生成的 PDF。"""
+    # 防止路径穿越
+    safe_name = os.path.basename(filename)
+    pdf_path = pdf_root / task_id / "output" / safe_name
+    if not pdf_path.exists() or not pdf_path.is_file():
+        return jsonify({"error": "文件不存在"}), 404
+    return send_file(pdf_path, as_attachment=True, download_name=safe_name, mimetype="application/pdf")
+
+
+@app.post("/api/jobs/<job_id>/print_pdf")
+def print_job_outputs_pdf(job_id: str):
+    """将某个翻译任务的原始输入 + 翻译输出一起打印为 PDF。
+
+    实现用户描述的工作流：
+      1. 原始文件 → PDF
+      2. 翻译生成的新文件 → PDF
+    """
+    state = _read_job_state(job_id)
+    if not state:
+        return jsonify({"error": "任务不存在"}), 404
+
+    job_dir = jobs_root / job_id
+    input_dir = job_dir / "input"
+    output_dir = Path(str(state.get("output_dir", "")))
+    if not input_dir.exists() or not output_dir.exists():
+        return jsonify({"error": "任务目录缺失"}), 404
+
+    try:
+        engine = detect_engine()
+    except EngineNotAvailableError as exc:
+        return jsonify({"error": str(exc)}), 503
+
+    pdf_out_dir = job_dir / "pdf"
+    pdf_out_dir.mkdir(parents=True, exist_ok=True)
+    original_pdf_dir = pdf_out_dir / "original"
+    translated_pdf_dir = pdf_out_dir / "translated"
+
+    # 收集原始与翻译后的文件
+    originals = [p for p in input_dir.rglob("*") if p.is_file()]
+    translated = [
+        p for p in output_dir.rglob("*")
+        if p.is_file() and p.suffix.lower() in {".docx", ".xlsx", ".pdf"}
+    ]
+
+    original_results = print_many(originals, original_pdf_dir, engine=engine)
+    translated_results = print_many(translated, translated_pdf_dir, engine=engine)
+
+    zip_path = job_dir / f"{job_id}_pdfs.zip"
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for _src, pdf, err in original_results:
+            if pdf and not err:
+                zf.write(pdf, arcname=f"original/{pdf.name}")
+        for _src, pdf, err in translated_results:
+            if pdf and not err:
+                zf.write(pdf, arcname=f"translated/{pdf.name}")
+
+    def _summary(results):
+        return [
+            {
+                "input": src.name,
+                "status": "success" if pdf and not err else "failed",
+                "pdf": pdf.name if pdf else None,
+                "error": err,
+            }
+            for src, pdf, err in results
+        ]
+
+    return jsonify(
+        {
+            "job_id": job_id,
+            "engine": engine.name,
+            "original": _summary(original_results),
+            "translated": _summary(translated_results),
+            "download_url": f"/api/jobs/{job_id}/download_pdf",
+        }
+    )
+
+
+@app.get("/api/jobs/<job_id>/download_pdf")
+def download_job_pdf_bundle(job_id: str):
+    """下载翻译任务对应的 PDF 打包文件。"""
+    zip_path = jobs_root / job_id / f"{job_id}_pdfs.zip"
+    if not zip_path.exists():
+        return jsonify({"error": "PDF 打包不存在，请先调用 /api/jobs/<job_id>/print_pdf"}), 404
+    return send_file(zip_path, as_attachment=True, download_name=zip_path.name, mimetype="application/zip")
 
 
 @app.post("/api/translate_text")

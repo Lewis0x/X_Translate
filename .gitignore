@@ -2,6 +2,7 @@ local.config.json
 .venv/
 output/
 output_*/
+pytest-cache-files-*/
 scripts/tmp_*.py
 **/__pycache__/
 *.pyc

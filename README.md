@@ -9,15 +9,37 @@
 - 批量处理：文件/目录均可
 - 日志与报告：输出运行日志与 JSON 摘要
 - Web 前端：上传文件、配置参数、实时查看任务进度并下载结果
+- **打印为 PDF**：将 `.docx`/`.xlsx` 打印为 PDF（`.pdf` 透传），可独立使用或对翻译结果一键打印。
+  需要本机安装 [LibreOffice](https://www.libreoffice.org/)（推荐，跨平台）；Windows 下若已安装 MS Office + `pywin32` 也会自动回退使用 Word/Excel COM。
+
+## 文档导航
+
+- 本文档 (README.md)：用户使用指南 — 安装、配置、CLI、Web。
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)：架构与模块职责。
+- [docs/API.md](docs/API.md)：HTTP API 参考。
+- [docs/PDF_PRINTING.md](docs/PDF_PRINTING.md)：打印为 PDF 专题（引擎安装、三种用法、故障排查）。
+- [docs/FEATURES.md](docs/FEATURES.md)：高级功能（LQA、翻译记忆、多模型对比）使用与 Python API。
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)：常见错误与排查手册。
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)：生产部署、反向代理、Docker、systemd。
+- [CONTRIBUTING.md](CONTRIBUTING.md)：贡献流程、编码规范、新增 adapter/LLM 指南。
+- [tests/README.md](tests/README.md)：测试说明与 mock 约定。
 
 ## 1. 安装
 
 ```bash
-cd d:/Work/Lewis/doc_translator_tool
+git clone <repo-url>
+cd X_Translate
 python -m venv .venv
-.venv\\Scripts\\activate
+
+# Windows
+.venv\Scripts\activate
+# Linux / macOS
+source .venv/bin/activate
+
 pip install -r requirements.txt
 ```
+
+> 如需使用"打印为 PDF"功能，另需本机安装 [LibreOffice](https://www.libreoffice.org/)；Windows 用户若已装 MS Office，也可额外 `pip install pywin32` 启用 COM 备选引擎。具体见 [docs/PDF_PRINTING.md](docs/PDF_PRINTING.md)。
 
 ## 2. 本地配置（推荐）
 
@@ -90,6 +112,58 @@ set OPENAI_API_KEY=你的key
 - `target`: 目标词
 - `case_sensitive`: 是否大小写敏感（true/false）
 - `lock`: 是否锁定不翻译（true/false）
+- `category`: 术语分类（可选，如 Geometry, UI, Command, General）
+- `comment`: 术语说明（可选）
+
+### 4.1 术语分类
+
+术语表支持分类管理，便于按场景筛选：
+
+```python
+# 按分类获取术语
+glossary = Glossary.load("glossary.csv")
+geometry_terms = glossary.get_terms_by_category("Geometry")
+
+# 获取术语摘要用于 LLM prompt
+summary = glossary.get_glossary_summary(max_items=20)
+```
+
+### 4.2 翻译记忆库 (TM)
+
+支持自动保存和复用历史翻译：
+
+```python
+from doc_translator.translation_memory import TranslationMemory
+
+# 加载已有 TM
+tm = TranslationMemory("tm.json")
+
+# 查找相似翻译
+matches = tm.find_matches("Hello world", min_similarity=0.8)
+
+# 获取 TM 上下文用于 prompt
+context = tm.get_tm_context(texts, max_items=10)
+```
+
+### 4.3 LQA 自动检查
+
+翻译后自动执行质量检查：
+
+```python
+from doc_translator.lqa import LQAChecker
+
+checker = LQAChecker(glossary)
+result = checker.check(source_segments, target_segments, glossary)
+
+print(f"质量分数: {result.score}")
+for issue in result.issues:
+    print(f"[{issue.severity}] {issue.message}")
+```
+
+检查类型：
+- **术语一致性**: 验证目标文本是否包含 glossary 中的目标术语
+- **占位符完整性**: 验证 %s, %d, {0} 等参数占位符是否保留
+- **数字保留**: 验证原文数字是否在译文中保留
 
 ## 5. 使用方式
 
@@ -144,8 +218,36 @@ python run.py --input ./test_materials --target en --source auto --domain legal
 - `--compare-sample-size`: 对比采样段落数，默认 `80`
 - `--compare-report`: 对比报告文件名，默认 `compare_report.json`
 - `--force-run`: 忽略运行锁强制执行
+- `--to-pdf`: 翻译完成后将原始文件和翻译文件分别打印为 PDF，输出到 `<output-dir>/pdf/original` 与 `<output-dir>/pdf/translated`
+- `--pdf-engine`: `--to-pdf` 所用引擎，`auto`（默认）/ `libreoffice` / `word_com`
+- `--pdf-timeout`: `--to-pdf` 单文件转换超时（秒），默认 `180`
+
+> **关于 LQA / TM**：这两个能力目前只通过 Python API (`TranslationPipeline(tm_path=..., enable_lqa=True)`) 使用，CLI 暂无直接开关。详见 [docs/FEATURES.md](docs/FEATURES.md)。
 
 ## 6. 输出内容
+
+翻译结束后，`<output-dir>/` 目录下会生成：
+
+```
+output/
+├── <原名>_<后缀>.<ext>          # 翻译结果（docx/xlsx/pdf）
+├── report.json                  # 汇总报告
+├── logs/translator.log          # 运行日志（按行）
+├── .run.lock                    # 运行锁（进程结束后自动移除）
+├── compare_report.json          # （仅 --compare-apis）多模型对比结果
+└── pdf/                         # （仅 --to-pdf）
+    ├── original/                # 原始文件的 PDF
+    └── translated/              # 翻译后文件的 PDF
+```
+
+`report.json` 字段概览：
+
+| 字段 | 说明 |
+|------|------|
+| `source_lang` / `target_lang` / `model` | 本轮运行参数 |
+| `files_total` / `files_succeeded` / `files_failed` | 文件级统计 |
+| `segments_total` / `segments_translated` / `glossary_hits` | 文本段统计 |
+| `results[]` | 每个文件的 `input_path / output_path / status / segments_* / glossary_hits / lqa_score / lqa_issues / error` |
 
 ## 测试素材目录
 
@@ -169,7 +271,15 @@ python run.py --input ./test_materials --target en --source auto --domain legal 
 
 - 翻译后的文档（`原名_后缀.ext`）
 - `logs/translator.log`
-- `report.json`（总量、成功失败、术语命中等统计）
+- `report.json`（总量、成功失败、术语命中、LQA 分数等统计）
+
+### 6.1 报告字段说明
+
+`report.json` 新增字段：
+
+- `lqa_score`: LQA 质量分数（0-100）
+- `lqa_issues`: LQA 问题列表（按段落索引、类型、严重程度）
+- TM 相关：翻译记忆自动保存到指定路径
 
 ## 7. Web界面
 
@@ -198,7 +308,43 @@ python webapp.py
 - Web 任务会启动独立 worker 子进程执行翻译，避免轮询状态/日志时影响翻译进程。
 - 任务状态持久化到 `web_runs/<job_id>/job_state.json`，Web 重载后仍可继续查询任务状态。
 
-## 8. 说明
+## 8. 打印为 PDF
+
+项目内置 `.docx` / `.xlsx` / `.pptx` / `.odt` / `.rtf` 等格式 → PDF 的批量转换能力，`.pdf` 文件直接透传。**不依赖**翻译流程，也可独立使用。详细指南见 [docs/PDF_PRINTING.md](docs/PDF_PRINTING.md)。
+
+**四种触发方式：**
+
+```bash
+# (1) 独立 CLI：批量把目录里的 Office 文档转为 PDF
+python -m doc_translator.print_pdf_cli \
+    --input ./docs --output-dir ./pdf_out --recursive
+
+# (2) 翻译 + 同时生成两份 PDF（原始 + 翻译）
+python run.py --input ./docs --target en --output-dir ./out --to-pdf
+
+# (3) HTTP 独立接口（需启动 webapp.py）
+curl -F "files=@a.docx" http://127.0.0.1:5050/api/print_pdf -o a.pdf
+
+# (4) HTTP 对翻译任务打印（原始 + 翻译 → zip）
+curl -X POST http://127.0.0.1:5050/api/jobs/<job_id>/print_pdf
+curl -O http://127.0.0.1:5050/api/jobs/<job_id>/download_pdf
+```
+
+或 Python 模块直调：
+
+```python
+from pathlib import Path
+from doc_translator.pdf_printer import print_to_pdf, print_many
+
+print_to_pdf(Path("报告.docx"), Path("./pdf_out"))
+
+results = print_many(
+    [Path("a.docx"), Path("b.xlsx"), Path("c.pdf")],
+    Path("./pdf_out"),
+)
+```
+
+**引擎要求：** 至少安装 LibreOffice 或在 Windows 上安装 MS Office (+ `pywin32`)。可通过 `GET /api/pdf/engine` 或 `python -m doc_translator.print_pdf_cli --input . --output-dir /tmp --dry-run` 检查可用性。
 
 ## 9. Office 插件（Word/Excel）
 
@@ -235,7 +381,12 @@ manifest 文件位置：
 
 若你的 Office 环境对 `http://127.0.0.1` 有策略限制，可将 `manifest.xml` 中 URL 改为你本机可访问的 HTTPS 地址（如本地反向代理证书域名）。
 
-- `.docx` 采用“复制 + 文本节点替换”策略，尽量保持版式。
-- `.pdf` 为文本块覆盖方案，复杂排版可能需人工抽检。
-- 扫描件 PDF / 图片内容 OCR 不在本工具范围内。
-- 输出目录包含运行锁（`.run.lock`），避免并发覆盖同一输出。
+## 10. 实现说明与已知限制
+
+- `.docx` 采用"复制 + 文本节点替换"策略，尽量保持版式。
+- `.xlsx` 基于 openpyxl 遍历字符串单元格；含公式的单元格（`=...`）会被跳过。
+- `.pdf` 为文本块覆盖方案（白底矩形遮盖 + 目标文本插入），复杂排版可能需人工抽检。
+- 扫描件 PDF / 图片内容 OCR **不在**本工具范围内。
+- "打印为 PDF"依赖外部引擎（LibreOffice 或 Word COM），不安装则相关接口/CLI 会返回明确的 `EngineNotAvailableError`。
+- 输出目录包含运行锁（`.run.lock`），避免并发覆盖同一输出；如需强行运行，传 `--force-run`。
+- 更多疑难问题请参阅 [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)。

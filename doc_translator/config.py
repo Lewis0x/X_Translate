@@ -1,3 +1,12 @@
+"""本地配置、LLM profiles 列表与进程锁工具。
+
+- :func:`load_local_config` 读取 ``local.config.json``；不存在则返回 ``{}``。
+- :func:`read_profiles` 从配置中解析 ``LLM_PROFILES`` 列表，用于多模型对比。
+- :func:`is_pid_alive` 跨平台判断 pid 是否仍在运行。
+- :func:`read_lock` / :func:`write_lock` 负责 ``.run.lock`` 文件的原子读写，
+  被 CLI 和 web worker 用来避免同一个输出目录被并发覆盖。
+"""
+
 from __future__ import annotations
 
 import json

@@ -236,7 +236,74 @@
     }
 
     .download-btn:hover { background: #059669; }
-    
+
+    .section-divider {
+      margin: 40px 0 24px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .section-hint {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .engine-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-weight: 500;
+    }
+
+    .engine-chip.unavailable { background: #fee2e2; color: #b91c1c; }
+
+    .pdf-result-list {
+      margin-top: 16px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .pdf-result-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    .pdf-result-list .name {
+      font-family: monospace;
+      word-break: break-all;
+      flex: 1;
+      margin-right: 12px;
+    }
+
+    .pdf-result-list .status.success { color: var(--success); font-weight: 500; }
+    .pdf-result-list .status.failed { color: var(--error); font-weight: 500; }
+
+    .pdf-result-list a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .pdf-result-list a:hover { text-decoration: underline; }
+
     .error-msg {
       margin-top: 12px;
       color: var(--error);
@@ -395,6 +462,49 @@
           <svg style="width:16px;height:16px;display:inline-block;vertical-align:text-bottom;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           下载翻译结果
         </a>
+        <button type="button" id="printJobPdfBtn" style="display:none;margin-top:12px;background:#0ea5e9;">
+          将原始 + 翻译文件打印为 PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="section-title">打印为 PDF</div>
+    <div class="section-hint">
+      独立工具：将 <code>.docx</code> / <code>.xlsx</code> 转换为 PDF（<code>.pdf</code> 文件直接透传）。
+      支持批量；多文件会打包为 zip。
+      <span id="engineChip" class="engine-chip" style="margin-left:8px;">引擎检测中…</span>
+    </div>
+
+    <form id="pdfForm">
+      <div class="file-upload">
+        <input type="file" name="files" id="pdfFiles" multiple required accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.pdf" />
+        <div class="file-upload-text">
+          <svg style="width:32px;height:32px;margin:0 auto 8px;color:#9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <div><strong>点击选择文件</strong> 或拖拽文件到此处</div>
+          <div style="margin-top:4px;font-size:12px;" id="pdfFileCount">支持多选 (.docx, .xlsx, .pdf ...)</div>
+        </div>
+      </div>
+      <button type="submit" id="pdfSubmitBtn">打印为 PDF</button>
+    </form>
+
+    <div id="pdfResultCard" class="card" style="display:none;">
+      <div style="font-weight:600;font-size:16px;">PDF 打印结果</div>
+      <ul id="pdfResultList" class="pdf-result-list"></ul>
+      <div id="pdfResultError" class="error-msg"></div>
+    </div>
+
+    <div id="jobPdfCard" class="card" style="display:none;">
+      <div style="font-weight:600;font-size:16px;">翻译任务 PDF 打印结果</div>
+      <div style="margin-top:8px;">
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">原始文件</div>
+        <ul id="jobPdfOriginal" class="pdf-result-list"></ul>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">翻译文件</div>
+        <ul id="jobPdfTranslated" class="pdf-result-list"></ul>
+      </div>
+      <div style="text-align:center;">
+        <a id="jobPdfDownload" class="download-btn" style="display:none;" href="#">下载 PDF 打包</a>
       </div>
     </div>
   </div>
@@ -481,6 +591,8 @@
           submitBtn.textContent = '开始翻译';
           downloadLink.href = `/api/jobs/${jobId}/download`;
           downloadLink.style.display = 'inline-block';
+          printJobPdfBtn.style.display = 'inline-block';
+          printJobPdfBtn.dataset.jobId = jobId;
         }
         if (data.status === 'failed') {
           clearInterval(timer);
@@ -492,6 +604,160 @@
         console.error(err);
       }
     }
+
+    // ===== PDF 打印相关 =====
+    const engineChip = document.getElementById('engineChip');
+    const pdfForm = document.getElementById('pdfForm');
+    const pdfFiles = document.getElementById('pdfFiles');
+    const pdfFileCount = document.getElementById('pdfFileCount');
+    const pdfSubmitBtn = document.getElementById('pdfSubmitBtn');
+    const pdfResultCard = document.getElementById('pdfResultCard');
+    const pdfResultList = document.getElementById('pdfResultList');
+    const pdfResultError = document.getElementById('pdfResultError');
+    const printJobPdfBtn = document.getElementById('printJobPdfBtn');
+    const jobPdfCard = document.getElementById('jobPdfCard');
+    const jobPdfOriginal = document.getElementById('jobPdfOriginal');
+    const jobPdfTranslated = document.getElementById('jobPdfTranslated');
+    const jobPdfDownload = document.getElementById('jobPdfDownload');
+
+    async function refreshEngine() {
+      try {
+        const res = await fetch('/api/pdf/engine');
+        const data = await res.json();
+        if (data.available) {
+          engineChip.textContent = `引擎: ${data.description || data.engine}`;
+          engineChip.classList.remove('unavailable');
+        } else {
+          engineChip.textContent = `无可用引擎 - ${data.error || '请安装 LibreOffice'}`;
+          engineChip.classList.add('unavailable');
+        }
+      } catch (err) {
+        engineChip.textContent = '引擎检测失败';
+        engineChip.classList.add('unavailable');
+      }
+    }
+    refreshEngine();
+
+    pdfFiles.addEventListener('change', (e) => {
+      const count = e.target.files.length;
+      if (count > 0) {
+        pdfFileCount.textContent = `已选择 ${count} 个文件`;
+        pdfFileCount.style.color = 'var(--primary)';
+        pdfFileCount.style.fontWeight = '500';
+      } else {
+        pdfFileCount.textContent = '支持多选 (.docx, .xlsx, .pdf ...)';
+        pdfFileCount.style.color = '';
+        pdfFileCount.style.fontWeight = '';
+      }
+    });
+
+    function renderPdfResults(listEl, items) {
+      listEl.innerHTML = '';
+      items.forEach((item) => {
+        const li = document.createElement('li');
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'name';
+        nameSpan.textContent = item.input;
+
+        const rightWrap = document.createElement('span');
+        rightWrap.style.display = 'flex';
+        rightWrap.style.alignItems = 'center';
+        rightWrap.style.gap = '12px';
+
+        if (item.status === 'success') {
+          const ok = document.createElement('span');
+          ok.className = 'status success';
+          ok.textContent = '✓ 成功';
+          rightWrap.appendChild(ok);
+          if (item.download_url) {
+            const link = document.createElement('a');
+            link.href = item.download_url;
+            link.textContent = '下载';
+            rightWrap.appendChild(link);
+          }
+        } else {
+          const bad = document.createElement('span');
+          bad.className = 'status failed';
+          bad.textContent = '✗ 失败';
+          rightWrap.appendChild(bad);
+          if (item.error) {
+            const errEl = document.createElement('span');
+            errEl.style.color = 'var(--text-muted)';
+            errEl.style.fontSize = '12px';
+            errEl.textContent = item.error.slice(0, 80);
+            errEl.title = item.error;
+            rightWrap.appendChild(errEl);
+          }
+        }
+
+        li.appendChild(nameSpan);
+        li.appendChild(rightWrap);
+        listEl.appendChild(li);
+      });
+    }
+
+    pdfForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!pdfFiles.files.length) return;
+      pdfSubmitBtn.disabled = true;
+      pdfSubmitBtn.textContent = '正在打印...';
+      pdfResultError.style.display = 'none';
+      pdfResultCard.style.display = 'block';
+      pdfResultList.innerHTML = '<li>正在处理，请稍候…</li>';
+
+      try {
+        const formData = new FormData();
+        for (const f of pdfFiles.files) formData.append('files', f);
+        const res = await fetch('/api/print_pdf/json', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!res.ok) {
+          pdfResultList.innerHTML = '';
+          pdfResultError.textContent = data.error || '打印失败';
+          pdfResultError.style.display = 'block';
+          return;
+        }
+        renderPdfResults(pdfResultList, data.results || []);
+      } catch (err) {
+        pdfResultList.innerHTML = '';
+        pdfResultError.textContent = '网络错误';
+        pdfResultError.style.display = 'block';
+      } finally {
+        pdfSubmitBtn.disabled = false;
+        pdfSubmitBtn.textContent = '打印为 PDF';
+      }
+    });
+
+    printJobPdfBtn.addEventListener('click', async () => {
+      const jobId = printJobPdfBtn.dataset.jobId;
+      if (!jobId) return;
+      printJobPdfBtn.disabled = true;
+      printJobPdfBtn.textContent = '正在生成 PDF...';
+      jobPdfCard.style.display = 'block';
+      jobPdfOriginal.innerHTML = '<li>正在处理…</li>';
+      jobPdfTranslated.innerHTML = '';
+      jobPdfDownload.style.display = 'none';
+
+      try {
+        const res = await fetch(`/api/jobs/${jobId}/print_pdf`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) {
+          jobPdfOriginal.innerHTML = '';
+          showError(data.error || 'PDF 打印失败');
+          return;
+        }
+        renderPdfResults(jobPdfOriginal, data.original || []);
+        renderPdfResults(jobPdfTranslated, data.translated || []);
+        if (data.download_url) {
+          jobPdfDownload.href = data.download_url;
+          jobPdfDownload.style.display = 'inline-block';
+        }
+      } catch (err) {
+        showError('网络错误');
+      } finally {
+        printJobPdfBtn.disabled = false;
+        printJobPdfBtn.textContent = '将原始 + 翻译文件打印为 PDF';
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

@@ -1,3 +1,18 @@
+"""Web 任务独立 worker 进程。
+
+被 :mod:`webapp` 以子进程方式启动（``python -m doc_translator.web_worker
+--jobs-root ... --job-id ...``）。
+
+职责：
+
+1. 读取 ``<jobs_root>/<job_id>/job_config.json`` 得到用户配置；
+2. 调用 :class:`doc_translator.pipeline.TranslationPipeline` 执行翻译；
+3. 实时写回 ``job_state.json``（进度、当前文件、错误信息等）；
+4. 写 ``output/logs/translator.log`` 供前端 ``/api/jobs/<id>/logs`` 拉取。
+
+该模块不依赖 Flask；可独立 CLI 调用，便于排障。
+"""
+
 from __future__ import annotations
 
 import argparse

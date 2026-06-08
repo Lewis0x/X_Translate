@@ -1,3 +1,18 @@
+"""LLM 客户端与批量翻译实现。
+
+本模块定义：
+
+* :class:`TranslationConfig` —— 翻译运行所需的全部配置（模型、密钥、限流等）。
+* :class:`TranslatorProtocol` —— pipeline 使用的最小接口（只需实现 ``translate``）。
+* :class:`BaseBatchTranslator` —— 抽象基类，封装分批、限流、重试、术语上下文拼装。
+* 两个具体实现：``OpenAITranslator`` 和 ``OpenAICompatibleTranslator``。
+* :func:`create_translator` —— 根据 ``TranslationConfig.provider`` 工厂函数。
+
+扩展新的 LLM 提供方：继承 :class:`BaseBatchTranslator`，实现
+``_call_llm(messages)``；然后在 :func:`create_translator` 中按 provider 字符串
+注册分支。请保留重试 / 限流逻辑以避免触发上游速率限制。
+"""
+
 from __future__ import annotations
 
 import json
@@ -30,6 +45,8 @@ class TranslationConfig:
     model: str = "gpt-4.1-mini"
     temperature: float = 0.0
     timeout_seconds: int = 120
+    glossary_summary: str = ""  # 术语表摘要
+    context: str = ""  # 文档上下文描述
 
 
 class TranslatorProtocol(Protocol):
@@ -56,16 +73,42 @@ class BaseBatchTranslator(ABC):
             time.sleep(self.request_interval - elapsed)
 
     @staticmethod
-    def _build_prompt(source_lang: str, target_lang: str, domain: str) -> str:
+    def _build_prompt(
+        source_lang: str,
+        target_lang: str,
+        domain: str,
+        glossary_summary: str = "",
+        context: str = "",
+    ) -> str:
         source_text = "自动识别源语言" if source_lang.strip().lower() in {"auto", "", "detect"} else f"从 {source_lang}"
         domain_text = (domain or "general").strip()
-        return (
-            "你是专业技术文档翻译器。"
-            f"请将输入数组中的每一项{source_text}翻译为 {target_lang}。"
-            f"翻译场景：{domain_text}。请使用该领域的专业术语和表达。"
-            "严格保持数组长度和顺序一致。"
-            "只输出 JSON 数组字符串，不要输出任何额外文本。"
+
+        parts = [
+            "你是专业技术文档翻译器。",
+            f"请将输入数组中的每一项{source_text}翻译为 {target_lang}。",
+            f"翻译场景：{domain_text}。请使用该领域的专业术语和表达。",
+        ]
+
+        # 添加上下文信息
+        if context:
+            parts.append(f"文档上下文：{context}")
+
+        # 添加术语表
+        if glossary_summary:
+            parts.append(glossary_summary)
+
+        # 添加质量检查指令
+        parts.append(
+            "质量要求："
+            "1. 保持术语一致性，使用给定的术语表翻译专业词汇；"
+            "2. 保持占位符完整（如 %s, %d 等）；"
+            "3. 保持数字和单位的准确性；"
+            "4. 符合目标语言的表达习惯。"
         )
+
+        parts.append("严格保持数组长度和顺序一致。只输出 JSON 数组字符串，不要输出任何额外文本。")
+
+        return "\n\n".join(parts)
 
     @abstractmethod
     def translate_batch(self, texts: List[str]) -> List[str]:
@@ -119,7 +162,13 @@ class OpenAITranslator(BaseBatchTranslator):
             return []
 
         self._sleep_if_needed()
-        prompt = self._build_prompt(self.config.source_lang, self.config.target_lang, self.config.domain)
+        prompt = self._build_prompt(
+            self.config.source_lang,
+            self.config.target_lang,
+            self.config.domain,
+            self.config.glossary_summary,
+            self.config.context,
+        )
 
         message = json.dumps(texts, ensure_ascii=False)
         retries = self.config.max_retries
@@ -158,7 +207,13 @@ class OpenAICompatibleTranslator(BaseBatchTranslator):
             return []
 
         self._sleep_if_needed()
-        prompt = self._build_prompt(self.config.source_lang, self.config.target_lang, self.config.domain)
+        prompt = self._build_prompt(
+            self.config.source_lang,
+            self.config.target_lang,
+            self.config.domain,
+            self.config.glossary_summary,
+            self.config.context,
+        )
         payload = {
             "model": self.config.model,
             "temperature": self.config.temperature,

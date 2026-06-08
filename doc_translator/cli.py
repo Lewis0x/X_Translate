@@ -42,6 +42,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--compare-sample-size", type=int, default=80, help="模型对比采样段落数")
     parser.add_argument("--compare-report", default="compare_report.json", help="模型对比报告文件名")
     parser.add_argument("--force-run", action="store_true", help="忽略运行锁并强制执行")
+    parser.add_argument(
+        "--to-pdf",
+        action="store_true",
+        help="翻译完成后，将原始文件和翻译文件分别打印为 PDF（输出到 <output-dir>/pdf/original 和 /pdf/translated）",
+    )
+    parser.add_argument(
+        "--pdf-engine",
+        choices=["auto", "libreoffice", "word_com"],
+        default="auto",
+        help="--to-pdf 使用的引擎，默认 auto",
+    )
+    parser.add_argument(
+        "--pdf-timeout",
+        type=int,
+        default=180,
+        help="--to-pdf 单文件转换超时（秒），默认 180",
+    )
     return parser
 
 
@@ -107,8 +124,94 @@ def main() -> None:
         report_file = output_dir / "report.json"
         report.write(report_file)
         logger.info("处理结束，报告已生成: %s", report_file)
+
+        if args.to_pdf:
+            _run_post_translation_pdf(
+                files=files,
+                output_dir=output_dir,
+                report=report,
+                logger=logger,
+                engine_name=args.pdf_engine,
+                timeout=args.pdf_timeout,
+            )
     finally:
         _release_run_lock(lock_file)
+
+
+def _run_post_translation_pdf(
+    *,
+    files: List[Path],
+    output_dir: Path,
+    report,
+    logger,
+    engine_name: str,
+    timeout: int,
+) -> None:
+    """翻译完成后，把原始文件与翻译输出文件都打印为 PDF。
+
+    输出目录结构::
+
+        <output-dir>/pdf/
+            original/<input_stem>.pdf
+            translated/<output_stem>.pdf
+
+    不会让 PDF 打印失败影响翻译本身的退出码 —— 失败信息以 WARNING/ERROR 记录。
+    """
+    try:
+        from doc_translator.pdf_printer import (
+            EngineNotAvailableError,
+            PdfPrinterError,
+            print_many,
+        )
+        from doc_translator.print_pdf_cli import _resolve_engine  # type: ignore
+    except ImportError as exc:
+        logger.error("--to-pdf 模块加载失败：%s", exc)
+        return
+
+    try:
+        engine = _resolve_engine(engine_name)
+    except EngineNotAvailableError as exc:
+        logger.error("--to-pdf 无可用引擎，跳过打印：%s", exc)
+        return
+
+    logger.info("--to-pdf 使用引擎：%s", engine.description or engine.name)
+
+    pdf_root = output_dir / "pdf"
+    original_dir = pdf_root / "original"
+    translated_dir = pdf_root / "translated"
+
+    originals = [Path(p) for p in files if Path(p).is_file()]
+
+    # 翻译后的文件路径：report.results 里每个条目都带了 output_path
+    translated_files: List[Path] = []
+    for result in getattr(report, "results", []) or []:
+        status = getattr(result, "status", None) or (result.get("status") if isinstance(result, dict) else None)
+        output_path = getattr(result, "output_path", None) or (
+            result.get("output_path") if isinstance(result, dict) else None
+        )
+        if status == "success" and output_path:
+            candidate = Path(output_path)
+            if candidate.is_file():
+                translated_files.append(candidate)
+
+    try:
+        original_results = print_many(originals, original_dir, engine=engine, timeout=timeout)
+        translated_results = print_many(translated_files, translated_dir, engine=engine, timeout=timeout)
+    except PdfPrinterError as exc:
+        logger.error("--to-pdf 批量打印失败：%s", exc)
+        return
+
+    def _summarize(title: str, results) -> None:
+        ok = sum(1 for _src, pdf, err in results if pdf and not err)
+        bad = len(results) - ok
+        logger.info("--to-pdf %s：%d 成功 / %d 失败 / 共 %d", title, ok, bad, len(results))
+        for src, _pdf, err in results:
+            if err:
+                logger.warning("  ✗ %s: %s", src.name, err)
+
+    _summarize("原始文件 → PDF", original_results)
+    _summarize("翻译文件 → PDF", translated_results)
+    logger.info("--to-pdf 输出目录：%s", pdf_root.resolve())
 
 
 def _build_compare_profiles(args, local_config: dict) -> List[Tuple[str, TranslationConfig]]:

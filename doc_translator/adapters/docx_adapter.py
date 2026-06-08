@@ -75,6 +75,10 @@ class DocxAdapter:
         if progress_callback and total_segments == 0:
             progress_callback(0, 0)
 
+        # 收集所有原文和译文用于 LQA
+        all_source_segments: List[str] = []
+        all_target_segments: List[str] = []
+
         for part_name, root, refs, source_texts in part_tasks:
             translated = translator.translate(
                 source_texts,
@@ -89,11 +93,18 @@ class DocxAdapter:
                 restored, hits = glossary.postprocess(translated_text, refs[idx].placeholders)
                 refs[idx].node.text = restored
                 stats.glossary_hits += hits
+                # 收集 LQA 所需段落
+                all_source_segments.append(source_texts[idx])
+                all_target_segments.append(restored)
 
             stats.segments_total += len(source_texts)
             stats.segments_translated += len(source_texts)
             files[part_name] = ET.tostring(root, encoding="utf-8", xml_declaration=True)
             translated_so_far += len(source_texts)
+
+        # 保存 LQA 所需段落
+        stats.source_segments = all_source_segments
+        stats.target_segments = all_target_segments
 
         if progress_callback and total_segments > 0:
             progress_callback(total_segments, total_segments)

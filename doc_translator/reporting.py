@@ -36,6 +36,8 @@ class FileResult:
     segments_total: int = 0
     segments_translated: int = 0
     glossary_hits: int = 0
+    lqa_score: float = 0.0
+    lqa_issues: List[dict] = field(default_factory=list)
     error: str = ""
 
 

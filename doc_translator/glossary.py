@@ -14,6 +14,8 @@ class GlossaryTerm:
     target: str
     case_sensitive: bool = False
     lock: bool = False
+    category: str = ""
+    comment: str = ""
 
 
 def _to_bool(value: str | bool | None) -> bool:
@@ -80,6 +82,22 @@ class Glossary:
 
         return updated, hit_count
 
+    def get_terms_by_category(self, category: str) -> "Glossary":
+        """按分类获取术语，返回新的 Glossary 实例"""
+        filtered = [term for term in self.terms if term.category == category]
+        return Glossary(filtered)
+
+    def get_glossary_summary(self, max_items: int = 20) -> str:
+        """获取术语摘要，用于注入 LLM prompt"""
+        if not self.terms:
+            return ""
+        lines = ["术语表:"]
+        for term in self.terms[:max_items]:
+            lines.append(f"  {term.source} -> {term.target}")
+        if len(self.terms) > max_items:
+            lines.append(f"  ... 共 {len(self.terms)} 条术语")
+        return "\n".join(lines)
+
 
 def _load_csv(path: Path) -> List[GlossaryTerm]:
     terms: List[GlossaryTerm] = []
@@ -96,6 +114,8 @@ def _load_csv(path: Path) -> List[GlossaryTerm]:
                     target=target or source,
                     case_sensitive=_to_bool(row.get("case_sensitive")),
                     lock=_to_bool(row.get("lock")),
+                    category=(row.get("category") or "").strip(),
+                    comment=(row.get("comment") or "").strip(),
                 )
             )
     return terms
@@ -115,6 +135,8 @@ def _load_json(path: Path) -> List[GlossaryTerm]:
                 target=target or source,
                 case_sensitive=_to_bool(item.get("case_sensitive")),
                 lock=_to_bool(item.get("lock")),
+                category=str(item.get("category", "")).strip(),
+                comment=str(item.get("comment", "")).strip(),
             )
         )
     return terms

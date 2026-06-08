@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
@@ -14,6 +14,8 @@ class ProcessStats:
     segments_total: int = 0
     segments_translated: int = 0
     glossary_hits: int = 0
+    source_segments: list[str] = field(default_factory=list)
+    target_segments: list[str] = field(default_factory=list)
 
 
 class FileAdapter(Protocol):
